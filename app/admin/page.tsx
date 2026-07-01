@@ -114,18 +114,21 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth || !db) {
+    const firebaseAuth = auth;
+    const firestore = db;
+
+    if (!isFirebaseConfigured || !firebaseAuth || !firestore) {
       setAuthLoading(false);
       setError("لم يتم ضبط إعدادات Firebase بعد.");
       return;
     }
 
-    return onAuthStateChanged(auth, async (currentUser) => {
+    return onAuthStateChanged(firebaseAuth, async (currentUser) => {
       setUser(currentUser);
       setIsAdmin(false);
       if (currentUser) {
         try {
-          const adminSnapshot = await getDoc(doc(db, "admins", currentUser.uid));
+          const adminSnapshot = await getDoc(doc(firestore, "admins", currentUser.uid));
           setIsAdmin(adminSnapshot.exists());
         } catch {
           setIsAdmin(false);
@@ -136,8 +139,9 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin || !db) return undefined;
-    const q = query(collection(db, "tenders"), orderBy("created_at", "desc"));
+    const firestore = db;
+    if (!isAdmin || !firestore) return undefined;
+    const q = query(collection(firestore, "tenders"), orderBy("created_at", "desc"));
     return onSnapshot(q, (snapshot) => {
       setTenders(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Tender));
     });
@@ -146,9 +150,10 @@ export default function AdminPage() {
   async function login(event: FormEvent) {
     event.preventDefault();
     setError("");
-    if (!auth) return;
+    const firebaseAuth = auth;
+    if (!firebaseAuth) return;
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر تسجيل الدخول.");
     }
@@ -211,7 +216,8 @@ export default function AdminPage() {
     setMessage("");
     setError("");
 
-    if (!db) {
+    const firestore = db;
+    if (!firestore) {
       setError("Firestore غير متصل.");
       setSaving(false);
       return;
@@ -220,20 +226,20 @@ export default function AdminPage() {
     try {
       if (editingId) {
         const pdfUrl = await uploadPdf(editingId);
-        await updateDoc(doc(db, "tenders", editingId), {
+        await updateDoc(doc(firestore, "tenders", editingId), {
           ...formToPayload({ ...form, pdf_url: pdfUrl || form.pdf_url }),
           updated_at: serverTimestamp(),
         });
         setMessage("تم تحديث المناقصة بنجاح.");
       } else {
-        const newDoc = await addDoc(collection(db, "tenders"), {
+        const newDoc = await addDoc(collection(firestore, "tenders"), {
           ...formToPayload(form),
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
         });
         const pdfUrl = await uploadPdf(newDoc.id);
         if (pdfUrl) {
-          await updateDoc(doc(db, "tenders", newDoc.id), { pdf_url: pdfUrl, updated_at: serverTimestamp() });
+          await updateDoc(doc(firestore, "tenders", newDoc.id), { pdf_url: pdfUrl, updated_at: serverTimestamp() });
         }
         setMessage("تمت إضافة المناقصة بنجاح.");
       }
@@ -246,15 +252,17 @@ export default function AdminPage() {
   }
 
   async function removeTender(id?: string) {
-    if (!id || !db) return;
+    const firestore = db;
+    if (!id || !firestore) return;
     const confirmed = window.confirm("هل تريد حذف هذه المناقصة نهائياً؟");
     if (!confirmed) return;
-    await deleteDoc(doc(db, "tenders", id));
+    await deleteDoc(doc(firestore, "tenders", id));
   }
 
   async function updateStatus(id: string | undefined, status: TenderStatus) {
-    if (!id || !db) return;
-    await updateDoc(doc(db, "tenders", id), { status, updated_at: serverTimestamp() });
+    const firestore = db;
+    if (!id || !firestore) return;
+    await updateDoc(doc(firestore, "tenders", id), { status, updated_at: serverTimestamp() });
   }
 
   if (authLoading) {
