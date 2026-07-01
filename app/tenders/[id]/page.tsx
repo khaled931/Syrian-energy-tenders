@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { DocumentData } from "firebase-admin/firestore";
 import Link from "next/link";
 import ShareButton from "@/components/ShareButton";
 import { getAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
@@ -15,7 +16,7 @@ function serializeDate(value: unknown): string | undefined {
   return date ? date.toISOString() : undefined;
 }
 
-function serializeTender(id: string, data: FirebaseFirestore.DocumentData): Tender {
+function serializeTender(id: string, data: DocumentData): Tender {
   return {
     id,
     ...data,
