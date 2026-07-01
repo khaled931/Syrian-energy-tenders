@@ -10,18 +10,18 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "firebase": "latest",
-    "firebase-admin": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "firebase": ">=11 <13",
+    "firebase-admin": ">=13 <14",
+    "next": ">=15 <16",
+    "react": ">=19 <20",
+    "react-dom": ">=19 <20"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "typescript": "latest"
+    "@types/node": ">=20 <23",
+    "@types/react": ">=19 <20",
+    "@types/react-dom": ">=19 <20",
+    "eslint": ">=9 <10",
+    "eslint-config-next": ">=15 <16",
+    "typescript": ">=5 <6"
   }
 }
