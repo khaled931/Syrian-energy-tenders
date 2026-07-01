@@ -8,7 +8,7 @@ import { asRequirements, formatDate, normalizeDate, STATUS_LABELS_AR, Tender, TE
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 };
 
 function serializeDate(value: unknown): string | undefined {
