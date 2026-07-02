@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import SiteFooter from "@/components/SiteFooter";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import "./mobile-map.css";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <img src="/syrian-renewables-logo.svg" alt="Syrian Renewables" />
         </a>
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
