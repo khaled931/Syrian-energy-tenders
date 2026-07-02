@@ -13,6 +13,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [language, setLanguage] = useState<"AR" | "EN">("AR");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [energyType, setEnergyType] = useState("");
@@ -69,6 +70,8 @@ export default function HomePage() {
     });
   }, [energyType, governorate, search, status, tenderType, tenders]);
 
+  const activeFilters = [status, energyType, governorate, tenderType].filter(Boolean).length;
+
   function clearFilters() {
     setSearch("");
     setStatus("");
@@ -78,100 +81,120 @@ export default function HomePage() {
   }
 
   return (
-    <main className="sr-page-shell">
-      <header className="sr-hero">
-        <nav className="sr-topbar" aria-label="الشريط العلوي">
-          <div>
+    <main className={`sr-page-shell sr-home-shell ${theme === "dark" ? "sr-theme-dark" : ""}`}>
+      <header className="sr-hero sr-hero--compact">
+        <nav className="sr-topbar sr-mobile-topbar" aria-label="الشريط العلوي">
+          <div className="sr-title-block">
             <span className="sr-eyebrow">Syrian Renewables</span>
             <h1>مناقصات الطاقة</h1>
           </div>
-          <div className="sr-actions">
-            <button className="sr-button sr-button--ghost" type="button" onClick={() => setShowFilters((value) => !value)}>
-              فلاتر
+          <div className="sr-actions sr-mobile-actions">
+            <button className="sr-mini-button" type="button" onClick={() => setShowFilters(true)} aria-label="فتح الفلاتر">
+              فلتر{activeFilters ? ` ${activeFilters}` : ""}
             </button>
-            <button className="sr-button sr-button--ghost" type="button" onClick={() => setLanguage(language === "AR" ? "EN" : "AR")}>
+            <button className="sr-mini-button" type="button" onClick={() => setLanguage(language === "AR" ? "EN" : "AR")} aria-label="تبديل اللغة">
               {language}
             </button>
-            <Link className="sr-button sr-button--primary" href="/admin">
-              لوحة الإدارة
+            <button className="sr-mini-button" type="button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label="تبديل الوضع الداكن والفاتح">
+              {theme === "light" ? "☾" : "☀"}
+            </button>
+            <Link className="sr-mini-button sr-mini-button--primary" href="/admin" aria-label="لوحة الإدارة">
+              إدارة
             </Link>
           </div>
         </nav>
 
-        <section className="sr-hero__content">
+        <section className="sr-hero__content sr-hero__content--compact">
           <p>
-            منصة معلوماتية لتتبع مناقصات ومزايدات وعروض الطاقة والكهرباء والطاقة المتجددة في سورية، مع روابط المصادر ودفاتر الشروط عند توفرها.
+            منصة معلوماتية مختصرة لتتبع مناقصات ومزايدات وعروض الطاقة في سورية، مع روابط المصادر ودفاتر الشروط عند توفرها.
           </p>
-          <div className="sr-searchbar">
+          <div className="sr-searchbar sr-searchbar--compact">
             <input
               aria-label="بحث في المناقصات"
               type="search"
-              placeholder="ابحث باسم المناقصة، الجهة، المحافظة أو نوع الطاقة..."
+              placeholder="ابحث باسم المناقصة أو الجهة..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-            <button className="sr-button sr-button--primary" type="button">
-              بحث
-            </button>
           </div>
         </section>
       </header>
 
       {showFilters ? (
-        <section className="sr-filters" aria-label="فلاتر المناقصات">
-          <label>
-            الحالة
-            <select value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="">كل الحالات</option>
-              <option value="open">مفتوحة</option>
-              <option value="closed">مغلقة</option>
-              <option value="awarded">مُرساة</option>
-              <option value="cancelled">ملغاة</option>
-            </select>
-          </label>
+        <div className="sr-filter-layer" role="presentation">
+          <button className="sr-filter-backdrop" type="button" onClick={() => setShowFilters(false)} aria-label="إغلاق الفلاتر" />
+          <aside className="sr-filter-drawer" aria-label="فلاتر المناقصات">
+            <div className="sr-filter-drawer__head">
+              <div>
+                <span className="sr-eyebrow">Filter</span>
+                <h2>فلاتر البحث</h2>
+              </div>
+              <button className="sr-mini-button" type="button" onClick={() => setShowFilters(false)} aria-label="إغلاق">
+                ×
+              </button>
+            </div>
 
-          <label>
-            نوع الطاقة
-            <select value={energyType} onChange={(event) => setEnergyType(event.target.value)}>
-              <option value="">كل الأنواع</option>
-              {ENERGY_TYPES_AR.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="sr-filters sr-filters--drawer">
+              <label>
+                الحالة
+                <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                  <option value="">كل الحالات</option>
+                  <option value="open">مفتوحة</option>
+                  <option value="closed">مغلقة</option>
+                  <option value="awarded">مُرساة</option>
+                  <option value="cancelled">ملغاة</option>
+                </select>
+              </label>
 
-          <label>
-            المحافظة
-            <select value={governorate} onChange={(event) => setGovernorate(event.target.value)}>
-              <option value="">كل المحافظات</option>
-              {GOVERNORATES_AR.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
+              <label>
+                نوع الطاقة
+                <select value={energyType} onChange={(event) => setEnergyType(event.target.value)}>
+                  <option value="">كل الأنواع</option>
+                  {ENERGY_TYPES_AR.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label>
-            نوع الفرصة
-            <select value={tenderType} onChange={(event) => setTenderType(event.target.value)}>
-              <option value="">كل الأنواع</option>
-              <option value="tender">مناقصة</option>
-              <option value="auction">مزاد</option>
-              <option value="offer">عرض</option>
-              <option value="rfp">طلب عروض</option>
-            </select>
-          </label>
+              <label>
+                المحافظة
+                <select value={governorate} onChange={(event) => setGovernorate(event.target.value)}>
+                  <option value="">كل المحافظات</option>
+                  {GOVERNORATES_AR.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <button className="sr-button sr-button--ghost" type="button" onClick={clearFilters}>
-            مسح الفلاتر
-          </button>
-        </section>
+              <label>
+                نوع الفرصة
+                <select value={tenderType} onChange={(event) => setTenderType(event.target.value)}>
+                  <option value="">كل الأنواع</option>
+                  <option value="tender">مناقصة</option>
+                  <option value="auction">مزاد</option>
+                  <option value="offer">عرض</option>
+                  <option value="rfp">طلب عروض</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="sr-filter-drawer__actions">
+              <button className="sr-button sr-button--ghost" type="button" onClick={clearFilters}>
+                مسح الفلاتر
+              </button>
+              <button className="sr-button sr-button--primary" type="button" onClick={() => setShowFilters(false)}>
+                تطبيق
+              </button>
+            </div>
+          </aside>
+        </div>
       ) : null}
 
-      <section className="sr-section-head">
+      <section className="sr-section-head sr-section-head--compact">
         <div>
           <span className="sr-eyebrow">النتائج</span>
           <h2>{filteredTenders.length} فرصة منشورة</h2>
@@ -182,7 +205,7 @@ export default function HomePage() {
       {error ? <p className="sr-state sr-state--error">{error}</p> : null}
       {!loading && !error && filteredTenders.length === 0 ? <p className="sr-state">لا توجد مناقصات مطابقة حالياً.</p> : null}
 
-      <section className="sr-card-grid" aria-label="قائمة المناقصات">
+      <section className="sr-card-grid sr-card-grid--compact" aria-label="قائمة المناقصات">
         {filteredTenders.map((tender) => (
           <TenderCard key={tender.id} tender={tender} />
         ))}
