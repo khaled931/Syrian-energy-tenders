@@ -1,7 +1,6 @@
 "use client";
 
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import TenderCard from "@/components/TenderCard";
 import { db, isFirebaseConfigured } from "@/lib/firebase";
@@ -98,9 +97,6 @@ export default function HomePage() {
             <button className="sr-mini-button" type="button" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label="تبديل الوضع الداكن والفاتح">
               {theme === "light" ? "☾" : "☀"}
             </button>
-            <Link className="sr-mini-button sr-mini-button--primary" href="/admin" aria-label="لوحة الإدارة">
-              إدارة
-            </Link>
           </div>
         </nav>
 
