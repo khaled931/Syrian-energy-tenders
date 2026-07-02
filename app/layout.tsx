@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           aria-label="الانتقال إلى الصفحة الرئيسية لمنصة Syrian Renewables"
         >
           <img src="/syrian-renewables-logo.svg" alt="Syrian Renewables" />
-          <span>الصفحة الرئيسية</span>
         </a>
         {children}
       </body>
