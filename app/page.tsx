@@ -1,10 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import TenderCard from "@/components/TenderCard";
 import { db, isFirebaseConfigured } from "@/lib/firebase";
 import { ENERGY_TYPES_AR, GOVERNORATES_AR, Tender } from "@/lib/types";
+
+const TenderMap = dynamic(() => import("@/components/TenderMap"), {
+  ssr: false,
+  loading: () => <p className="sr-state">جار تحميل خريطة المناقصات...</p>,
+});
 
 export default function HomePage() {
   const [tenders, setTenders] = useState<Tender[]>([]);
@@ -13,6 +19,7 @@ export default function HomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [language, setLanguage] = useState<"AR" | "EN">("AR");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [energyType, setEnergyType] = useState("");
@@ -99,6 +106,15 @@ export default function HomePage() {
             </button>
           </div>
         </nav>
+
+        <div className="sr-view-tabs" role="tablist" aria-label="طريقة عرض المناقصات">
+          <button className={viewMode === "list" ? "sr-view-tab sr-view-tab--active" : "sr-view-tab"} type="button" onClick={() => setViewMode("list")}>
+            قائمة المناقصات
+          </button>
+          <button className={viewMode === "map" ? "sr-view-tab sr-view-tab--active" : "sr-view-tab"} type="button" onClick={() => setViewMode("map")}>
+            خريطة المناقصات والعروض
+          </button>
+        </div>
 
         <section className="sr-hero__content sr-hero__content--compact">
           <p>
@@ -201,11 +217,15 @@ export default function HomePage() {
       {error ? <p className="sr-state sr-state--error">{error}</p> : null}
       {!loading && !error && filteredTenders.length === 0 ? <p className="sr-state">لا توجد مناقصات مطابقة حالياً.</p> : null}
 
-      <section className="sr-card-grid sr-card-grid--compact" aria-label="قائمة المناقصات">
-        {filteredTenders.map((tender) => (
-          <TenderCard key={tender.id} tender={tender} />
-        ))}
-      </section>
+      {!loading && !error && viewMode === "map" ? <TenderMap tenders={filteredTenders} /> : null}
+
+      {!loading && !error && viewMode === "list" ? (
+        <section className="sr-card-grid sr-card-grid--compact" aria-label="قائمة المناقصات">
+          {filteredTenders.map((tender) => (
+            <TenderCard key={tender.id} tender={tender} />
+          ))}
+        </section>
+      ) : null}
     </main>
   );
 }
