@@ -12,20 +12,20 @@ export default function TenderCard({ tender }: { tender: Tender }) {
   const status = tender.status || "open";
 
   return (
-    <Link className="sr-card" href={`/tenders/${tender.id}`} aria-label={`فتح تفاصيل ${title}`}>
+    <Link className="sr-card sr-card--compact" href={`/tenders/${tender.id}`} aria-label={`فتح تفاصيل ${title}`}>
       <div className="sr-card__topline">
         <span className={`sr-status sr-status--${status}`}>{label(STATUS_LABELS_AR, status)}</span>
         <span className="sr-type">{label(TENDER_TYPE_LABELS_AR, tender.tender_type)}</span>
       </div>
 
-      <h2>{title}</h2>
-      <p className="sr-card__org">{organization}</p>
+      <div className="sr-card__main">
+        <h2>{title}</h2>
+        <p className="sr-card__org">{organization}</p>
+      </div>
 
-      {tender.summary_ar ? <p className="sr-card__summary">{tender.summary_ar}</p> : null}
-
-      <div className="sr-meta-grid">
+      <div className="sr-meta-grid sr-meta-grid--compact">
         <span>
-          <strong>نوع الطاقة</strong>
+          <strong>الطاقة</strong>
           {tender.energy_type || "غير محدد"}
         </span>
         <span>
@@ -33,17 +33,13 @@ export default function TenderCard({ tender }: { tender: Tender }) {
           {tender.governorate || "غير محدد"}
         </span>
         <span>
-          <strong>قيمة الدفتر</strong>
-          {tender.document_fee ? `${tender.document_fee} ${tender.currency || ""}` : "غير محدد"}
-        </span>
-        <span>
-          <strong>آخر موعد</strong>
+          <strong>الموعد</strong>
           {formatDate(tender.deadline)}
         </span>
       </div>
 
       <div className="sr-card__footer">
-        <span>تاريخ الإعلان: {formatDate(tender.announcement_date)}</span>
+        <span>{tender.document_fee ? `دفتر الشروط: ${tender.document_fee} ${tender.currency || ""}` : "دفتر الشروط: غير محدد"}</span>
         <span className="sr-readmore">التفاصيل ←</span>
       </div>
     </Link>
