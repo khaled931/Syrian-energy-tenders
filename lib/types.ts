@@ -109,6 +109,9 @@ export const DATA_QUALITY_OPTIONS: DataQuality[] = [
   "Unverified",
 ];
 
+export const DEFAULT_DEADLINE_WARNING_DAYS = 3;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 export function dateToInput(value?: TimestampLike): string {
   if (!value) return "";
   const date = normalizeDate(value);
@@ -136,6 +139,35 @@ export function formatDate(value?: TimestampLike, locale = "ar-SY"): string {
   const date = normalizeDate(value);
   if (!date) return "غير محدد";
   return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(date);
+}
+
+export function getTenderDeadlineState(tender: Tender, warningDays = DEFAULT_DEADLINE_WARNING_DAYS, now = new Date()) {
+  const deadlineDate = normalizeDate(tender.deadline);
+  const normalizedStatus = (tender.status || "open").toLowerCase();
+  const finalStatuses = ["closed", "awarded", "cancelled"];
+
+  if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
+    return {
+      deadlineDate,
+      isExpired: false,
+      isClosingSoon: false,
+      daysRemaining: null as number | null,
+      displayStatus: normalizedStatus,
+    };
+  }
+
+  const remainingMs = deadlineDate.getTime() - now.getTime();
+  const isExpired = remainingMs < 0;
+  const daysRemaining = Math.max(0, Math.ceil(remainingMs / DAY_IN_MS));
+  const isFinalStatus = finalStatuses.includes(normalizedStatus);
+
+  return {
+    deadlineDate,
+    isExpired,
+    isClosingSoon: !isFinalStatus && !isExpired && remainingMs <= warningDays * DAY_IN_MS,
+    daysRemaining,
+    displayStatus: isExpired && normalizedStatus === "open" ? "closed" : normalizedStatus,
+  };
 }
 
 export function asRequirements(value?: string[] | string): string[] {
