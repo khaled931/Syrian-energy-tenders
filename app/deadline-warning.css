@@ -1,22 +1,19 @@
 .sr-card--closing-soon {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(254, 242, 242, 0.92), rgba(255, 255, 255, 0.86)),
-    var(--sr-card-strong);
-  border-color: rgba(220, 38, 38, 0.24);
-  box-shadow: 0 16px 38px rgba(185, 28, 28, 0.08), 0 12px 34px rgba(35, 43, 43, 0.05);
+  background: var(--color-card);
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-card);
 }
 
 .sr-card--closing-soon::before {
   position: absolute;
-  top: 14px;
-  right: 0;
-  bottom: 14px;
+  inset-block: 14px;
+  inset-inline-start: 0;
   width: 4px;
   content: "";
-  background: #dc2626;
-  border-radius: 999px 0 0 999px;
+  background: var(--color-danger);
+  border-radius: var(--radius-pill);
 }
 
 .sr-deadline-badge {
@@ -24,90 +21,71 @@
   width: fit-content;
   align-items: center;
   gap: 6px;
-  min-height: 27px;
-  padding: 4px 10px;
-  color: #b42318;
-  background: rgba(254, 226, 226, 0.9);
-  border: 1px solid rgba(220, 38, 38, 0.18);
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 900;
+  min-height: 28px;
+  padding-block: 4px;
+  padding-inline: 10px;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
 .sr-deadline-badge::before {
   width: 7px;
   height: 7px;
   content: "";
-  background: #dc2626;
-  border-radius: 999px;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+  background: var(--color-danger);
+  border-radius: var(--radius-pill);
 }
 
 .sr-deadline-date--soon {
-  color: #b42318;
-  background: rgba(254, 226, 226, 0.78) !important;
-  border-color: rgba(220, 38, 38, 0.22) !important;
+  color: var(--color-danger);
+  background: var(--color-danger-soft) !important;
+  border-color: var(--color-danger-border) !important;
 }
 
 .sr-deadline-date--soon strong,
 .sr-deadline-text {
-  color: #b42318 !important;
+  color: var(--color-danger) !important;
 }
 
 .sr-map-marker--closing-soon,
 .sr-map-dot--closing-soon {
-  background: #dc2626 !important;
-  box-shadow: 0 0 0 7px rgba(220, 38, 38, 0.18), 0 8px 18px rgba(0, 0, 0, 0.18);
+  background: var(--color-danger) !important;
+  box-shadow: var(--focus-ring);
 }
 
 .sr-map-list-card--closing-soon {
-  background: rgba(254, 242, 242, 0.78);
-  border: 1px solid rgba(220, 38, 38, 0.12);
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-border);
 }
 
 .sr-map-list-card--closing-soon strong {
-  color: #b42318;
+  color: var(--color-danger);
 }
 
 .sr-map-card--closing-soon {
-  background: linear-gradient(135deg, rgba(254, 242, 242, 0.75), #fff);
-  border-radius: 18px;
+  background: var(--color-card);
+  border-radius: var(--radius-card);
 }
 
 .sr-deadline-badge--map {
-  margin-bottom: 8px;
-  font-size: 0.72rem;
-}
-
-.sr-theme-dark .sr-card--closing-soon {
-  background: linear-gradient(135deg, rgba(127, 29, 29, 0.42), rgba(11, 42, 50, 0.86));
-  border-color: rgba(248, 113, 113, 0.3);
-}
-
-.sr-theme-dark .sr-deadline-badge,
-.sr-theme-dark .sr-deadline-date--soon,
-.sr-theme-dark .sr-map-list-card--closing-soon {
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.38) !important;
-  border-color: rgba(248, 113, 113, 0.26) !important;
-}
-
-.sr-theme-dark .sr-deadline-date--soon strong,
-.sr-theme-dark .sr-deadline-text,
-.sr-theme-dark .sr-map-list-card--closing-soon strong {
-  color: #fecaca !important;
+  margin-block-end: 8px;
+  font-size: 12.5px;
 }
 
 @media (max-width: 720px) {
   .sr-card--closing-soon::before {
-    top: 12px;
-    bottom: 12px;
+    inset-block: 12px;
     width: 3px;
   }
 
   .sr-deadline-badge {
-    min-height: 24px;
-    padding: 3px 8px;
-    font-size: 0.68rem;
+    min-height: 26px;
+    padding-block: 3px;
+    padding-inline: 8px;
+    font-size: 12.5px;
   }
 }
