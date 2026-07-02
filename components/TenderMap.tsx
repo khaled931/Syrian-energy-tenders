@@ -3,7 +3,7 @@
 import Link from "next/link";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import { formatDate, STATUS_LABELS_AR, Tender, TENDER_TYPE_LABELS_AR } from "@/lib/types";
+import { formatDate, getTenderDeadlineState, STATUS_LABELS_AR, Tender, TENDER_TYPE_LABELS_AR } from "@/lib/types";
 
 type TenderWithCoordinates = Tender & {
   latitude?: number | string;
@@ -66,10 +66,10 @@ function label(map: Record<string, string>, value?: string) {
   return map[value] || value;
 }
 
-function createMarker(status?: string) {
+function createMarker(status?: string, isClosingSoon = false) {
   return L.divIcon({
     className: "sr-map-marker-wrap",
-    html: `<span class="sr-map-marker sr-map-marker--${status || "open"}"></span>`,
+    html: `<span class="sr-map-marker sr-map-marker--${status || "open"} ${isClosingSoon ? "sr-map-marker--closing-soon" : ""}"></span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
     popupAnchor: [0, -12],
@@ -79,6 +79,7 @@ function createMarker(status?: string) {
 export default function TenderMap({ tenders }: { tenders: Tender[] }) {
   const mapTenders = tenders.map((tender) => ({
     tender,
+    deadlineState: getTenderDeadlineState(tender),
     coords: getTenderCoordinates(tender as TenderWithCoordinates),
   }));
 
@@ -90,22 +91,24 @@ export default function TenderMap({ tenders }: { tenders: Tender[] }) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {mapTenders.map(({ tender, coords }) => {
+          {mapTenders.map(({ tender, coords, deadlineState }) => {
             const title = tender.title_ar || tender.title_en || "مناقصة دون عنوان";
             const organization = tender.organization_ar || tender.organization_en || "جهة غير محددة";
+            const status = deadlineState.displayStatus || "open";
             return (
-              <Marker key={tender.id || title} position={coords} icon={createMarker(tender.status)}>
+              <Marker key={tender.id || title} position={coords} icon={createMarker(status, deadlineState.isClosingSoon)}>
                 <Popup className="sr-map-popup">
-                  <div className="sr-map-card">
+                  <div className={deadlineState.isClosingSoon ? "sr-map-card sr-map-card--closing-soon" : "sr-map-card"}>
                     <div className="sr-map-card__tags">
-                      <span className={`sr-status sr-status--${tender.status || "open"}`}>{label(STATUS_LABELS_AR, tender.status)}</span>
+                      <span className={`sr-status sr-status--${status}`}>{label(STATUS_LABELS_AR, status)}</span>
                       <span className="sr-type">{label(TENDER_TYPE_LABELS_AR, tender.tender_type)}</span>
                     </div>
+                    {deadlineState.isClosingSoon ? <span className="sr-deadline-badge sr-deadline-badge--map">تنتهي قريبًا</span> : null}
                     <h3>{title}</h3>
                     <p>{organization}</p>
                     <div className="sr-map-card__meta">
                       <span>{tender.governorate || "غير محدد"}</span>
-                      <span>{formatDate(tender.deadline)}</span>
+                      <span className={deadlineState.isClosingSoon ? "sr-deadline-text" : ""}>{formatDate(tender.deadline)}</span>
                     </div>
                     {tender.id ? (
                       <Link className="sr-map-card__link" href={`/tenders/${tender.id}`}>
@@ -121,14 +124,20 @@ export default function TenderMap({ tenders }: { tenders: Tender[] }) {
       </div>
 
       <div className="sr-map-list" aria-label="قائمة مختصرة للمناقصات على الخريطة">
-        {mapTenders.map(({ tender, coords }) => {
+        {mapTenders.map(({ tender, coords, deadlineState }) => {
           const title = tender.title_ar || tender.title_en || "مناقصة دون عنوان";
+          const status = deadlineState.displayStatus || "open";
           return (
-            <Link className="sr-map-list-card" href={`/tenders/${tender.id}`} key={tender.id || title}>
-              <span className={`sr-map-dot sr-map-dot--${tender.status || "open"}`} />
+            <Link
+              className={deadlineState.isClosingSoon ? "sr-map-list-card sr-map-list-card--closing-soon" : "sr-map-list-card"}
+              href={`/tenders/${tender.id}`}
+              key={tender.id || title}
+            >
+              <span className={`sr-map-dot sr-map-dot--${status} ${deadlineState.isClosingSoon ? "sr-map-dot--closing-soon" : ""}`} />
               <div>
                 <strong>{title}</strong>
                 <small>
+                  {deadlineState.isClosingSoon ? "تنتهي قريبًا · " : ""}
                   {tender.governorate || "غير محدد"} · {formatDate(tender.deadline)} · {coords[0].toFixed(2)}, {coords[1].toFixed(2)}
                 </small>
               </div>
