@@ -10,7 +10,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body>{children}</body>
+      <body>
+        <a
+          className="sr-platform-logo"
+          href="https://syrianrenewables.com/"
+          aria-label="الانتقال إلى الصفحة الرئيسية لمنصة Syrian Renewables"
+        >
+          <img src="/syrian-renewables-logo.svg" alt="Syrian Renewables" />
+          <span>الصفحة الرئيسية</span>
+        </a>
+        {children}
+      </body>
     </html>
   );
 }
