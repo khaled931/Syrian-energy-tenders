@@ -3,6 +3,7 @@ import SiteFooter from "@/components/SiteFooter";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import "./mobile-map.css";
+import "./deadline-warning.css";
 
 export const metadata: Metadata = {
   title: "مناقصات الطاقة في سورية | Syrian Renewables",
