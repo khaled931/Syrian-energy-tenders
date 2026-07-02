@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import SiteFooter from "@/components/SiteFooter";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import "./mobile-map.css";
 import "./deadline-warning.css";
+
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  fallback: ["Cairo", "Segoe UI", "Tahoma", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   title: "مناقصات الطاقة في سورية | Syrian Renewables",
@@ -14,7 +22,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body>
+      <body className={ibmPlexSansArabic.className}>
         <a
           className="sr-platform-logo"
           href="https://syrianrenewables.com/"
