@@ -1,0 +1,47 @@
+.sr-platform-logo {
+  position: fixed;
+  inset-block-start: 10px;
+  inset-inline-start: 14px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 124px;
+  height: 142px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sr-platform-logo img {
+  flex: 0 0 auto;
+  width: 250px;
+  max-width: none;
+  height: auto;
+  object-fit: contain;
+}
+
+.sr-page-shell {
+  padding-block-start: 150px;
+}
+
+@media (max-width: 720px) {
+  .sr-platform-logo {
+    inset-block-start: 6px;
+    inset-inline-start: 8px;
+    width: 92px;
+    height: 112px;
+  }
+
+  .sr-platform-logo img {
+    width: 190px;
+  }
+
+  .sr-page-shell {
+    padding-block-start: 118px;
+  }
+}
