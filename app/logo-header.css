@@ -1,47 +1,52 @@
 .sr-platform-logo {
   position: fixed;
-  inset-block-start: 10px;
+  inset-block-start: 12px;
   inset-inline-start: 14px;
   z-index: 100;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 124px;
-  height: 142px;
-  min-height: 0;
-  padding: 0;
-  overflow: hidden;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  width: 96px;
+  min-height: 78px;
+  padding: 6px 8px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.sr-platform-logo:hover {
+  background: var(--color-hover-bg);
+  border-color: var(--color-primary);
+  text-decoration: none;
 }
 
 .sr-platform-logo img {
-  flex: 0 0 auto;
-  width: 250px;
-  max-width: none;
+  display: block;
+  width: 78px;
+  max-width: 100%;
   height: auto;
   object-fit: contain;
 }
 
 .sr-page-shell {
-  padding-block-start: 150px;
+  padding-block-start: 108px;
 }
 
 @media (max-width: 720px) {
   .sr-platform-logo {
-    inset-block-start: 6px;
+    inset-block-start: 8px;
     inset-inline-start: 8px;
-    width: 92px;
-    height: 112px;
+    width: 72px;
+    min-height: 60px;
+    padding: 4px 5px;
   }
 
   .sr-platform-logo img {
-    width: 190px;
+    width: 58px;
   }
 
   .sr-page-shell {
-    padding-block-start: 118px;
+    padding-block-start: 78px;
   }
 }
