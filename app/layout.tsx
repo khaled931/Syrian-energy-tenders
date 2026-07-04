@@ -7,6 +7,7 @@ import "./mobile-map.css";
 import "./deadline-warning.css";
 import "./logo-header.css";
 import "./card-density.css";
+import "./theme-toggle.css";
 
 const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"],
@@ -25,8 +26,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ar" dir="rtl">
       <body className={ibmPlexSansArabic.className}>
-        <a className="sr-platform-logo" href="https://syrianrenewables.com/" aria-label="الانتقال إلى الصفحة الرئيسية لمنصة Syrian Renewables">
-          <img src="/syrian-renewables-logo.svg" alt="Syrian Renewables" />
+        <a className="sr-platform-logo" href="https://syrianrenewables.com/" aria-label="العودة إلى الصفحة الرئيسية لمنصة بوابة الطاقة المتجددة في سورية">
+          <span>العودة إلى الصفحة الرئيسية</span>
         </a>
         {children}
         <SiteFooter />
