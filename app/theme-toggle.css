@@ -1,0 +1,47 @@
+html[data-theme="dark"] {
+  --color-primary: #7FD8C7;
+  --color-primary-dark: #BFEFE5;
+  --color-primary-hover: #9FE5D8;
+  --color-primary-active: #D8F8F2;
+  --color-accent-gold: #D8C57A;
+  --color-gold-soft: #B5A05C;
+  --color-icon-tile-bg: #22362F;
+  --color-ink: #F6F8F7;
+  --color-text: #D7DEDB;
+  --color-text-muted: #A9B4B0;
+  --color-chip-bg: #20342E;
+  --color-chip-text: #E9F0ED;
+  --color-border: #2D4A42;
+  --color-card: #10231F;
+  --color-hover-bg: #18332D;
+  --color-danger: #F29A86;
+  --color-success: #7FD8C7;
+  --color-table-header-bg: #172D28;
+  --color-table-row-hover: #18332D;
+  --color-error-bg: #2A1714;
+  --color-success-bg: #102A24;
+  --color-overlay: rgba(0,0,0,.46);
+  --color-danger-soft: rgba(242,154,134,.13);
+  --color-danger-border: rgba(242,154,134,.32);
+  --shadow-card: 0 1px 3px rgba(0,0,0,.28);
+  --shadow-surface: 0 8px 24px rgba(0,0,0,.22);
+  --focus-ring: 0 0 0 3px rgba(127,216,199,.25);
+  --gradient-page: linear-gradient(165deg, #0B1714 0%, #122B25 100%);
+}
+
+html[data-theme="dark"] .sr-button--primary,
+html[data-theme="dark"] .sr-mini-button--primary,
+html[data-theme="dark"] .sr-view-tab--active,
+html[data-theme="dark"] .sr-map-card__link {
+  color: #0B1714;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .leaflet-container {
+  filter: brightness(.82) saturate(.82);
+}

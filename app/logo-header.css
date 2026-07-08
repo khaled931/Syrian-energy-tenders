@@ -1,0 +1,63 @@
+.sr-platform-logo {
+  position: fixed;
+  inset-block-start: 14px;
+  inset-inline-start: 14px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  color: var(--color-primary-dark);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sr-platform-logo:hover {
+  background: var(--color-hover-bg);
+  border-color: var(--color-primary);
+  text-decoration: none;
+}
+
+.sr-platform-logo span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sr-platform-logo span::before {
+  content: "↗";
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
+.sr-page-shell {
+  padding-block-start: 84px;
+}
+
+@media (max-width: 720px) {
+  .sr-platform-logo {
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    min-height: 38px;
+    max-width: calc(100vw - 112px);
+    padding: 7px 12px;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+  }
+
+  .sr-platform-logo span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sr-page-shell {
+    padding-block-start: 64px;
+  }
+}

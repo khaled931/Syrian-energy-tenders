@@ -27,6 +27,26 @@ export default function HomePage() {
   const [tenderType, setTenderType] = useState("");
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem("sr-theme", theme);
+    } catch {
+      // Theme persistence is optional.
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    try {
+      const savedTheme = window.localStorage.getItem("sr-theme");
+      if (savedTheme === "dark" || savedTheme === "light") {
+        setTheme(savedTheme);
+      }
+    } catch {
+      // Keep the default light theme if localStorage is unavailable.
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isFirebaseConfigured || !db) {
       setLoading(false);
       setError("لم يتم ضبط إعدادات Firebase بعد. أضف متغيرات البيئة ثم أعد النشر.");
