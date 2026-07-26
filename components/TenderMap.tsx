@@ -3,7 +3,17 @@
 import Link from "next/link";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import { formatDate, getTenderDeadlineState, STATUS_LABELS_AR, Tender, TENDER_TYPE_LABELS_AR } from "@/lib/types";
+import type { PlatformLocale } from "@/lib/platform";
+import {
+  formatDate,
+  getTenderDeadlineState,
+  GOVERNORATE_LABELS_EN,
+  STATUS_LABELS_AR,
+  STATUS_LABELS_EN,
+  Tender,
+  TENDER_TYPE_LABELS_AR,
+  TENDER_TYPE_LABELS_EN,
+} from "@/lib/types";
 
 type TenderWithCoordinates = Tender & {
   latitude?: number | string;
@@ -61,8 +71,8 @@ function getTenderCoordinates(tender: TenderWithCoordinates): [number, number] {
   return GOVERNORATE_COORDINATES[tender.governorate || "غير محدد"] || GOVERNORATE_COORDINATES["غير محدد"];
 }
 
-function label(map: Record<string, string>, value?: string) {
-  if (!value) return "غير محدد";
+function label(map: Record<string, string>, value: string | undefined, fallback: string) {
+  if (!value) return fallback;
   return map[value] || value;
 }
 
@@ -76,7 +86,12 @@ function createMarker(status?: string, isClosingSoon = false) {
   });
 }
 
-export default function TenderMap({ tenders }: { tenders: Tender[] }) {
+export default function TenderMap({ tenders, locale }: { tenders: Tender[]; locale: PlatformLocale }) {
+  const isArabic = locale === "ar";
+  const fallback = isArabic ? "غير محدد" : "Not specified";
+  const statusLabels = isArabic ? STATUS_LABELS_AR : STATUS_LABELS_EN;
+  const typeLabels = isArabic ? TENDER_TYPE_LABELS_AR : TENDER_TYPE_LABELS_EN;
+  const dateLocale = isArabic ? "ar-SY" : "en-GB";
   const mapTenders = tenders.map((tender) => ({
     tender,
     deadlineState: getTenderDeadlineState(tender),
@@ -84,7 +99,7 @@ export default function TenderMap({ tenders }: { tenders: Tender[] }) {
   }));
 
   return (
-    <section className="sr-map-shell" aria-label="خريطة المناقصات والعروض في سورية">
+    <section className="sr-map-shell" aria-label={isArabic ? "خريطة المناقصات والعروض في سورية" : "Map of tenders and offers in Syria"}>
       <div className="sr-map-panel">
         <MapContainer center={[34.8021, 38.9968]} zoom={6} minZoom={5} maxZoom={13} scrollWheelZoom className="sr-map">
           <TileLayer
@@ -92,29 +107,26 @@ export default function TenderMap({ tenders }: { tenders: Tender[] }) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {mapTenders.map(({ tender, coords, deadlineState }) => {
-            const title = tender.title_ar || tender.title_en || "مناقصة دون عنوان";
-            const organization = tender.organization_ar || tender.organization_en || "جهة غير محددة";
+            const title = isArabic ? tender.title_ar || tender.title_en || "مناقصة دون عنوان" : tender.title_en || tender.title_ar || "Untitled tender";
+            const organization = isArabic ? tender.organization_ar || tender.organization_en || "جهة غير محددة" : tender.organization_en || tender.organization_ar || "Organization not specified";
             const status = deadlineState.displayStatus || "open";
+            const governorate = isArabic ? tender.governorate || fallback : GOVERNORATE_LABELS_EN[tender.governorate] || tender.governorate || fallback;
             return (
               <Marker key={tender.id || title} position={coords} icon={createMarker(status, deadlineState.isClosingSoon)}>
                 <Popup className="sr-map-popup">
-                  <div className={deadlineState.isClosingSoon ? "sr-map-card sr-map-card--closing-soon" : "sr-map-card"}>
+                  <div className={deadlineState.isClosingSoon ? "sr-map-card sr-map-card--closing-soon" : "sr-map-card"} dir={isArabic ? "rtl" : "ltr"}>
                     <div className="sr-map-card__tags">
-                      <span className={`sr-status sr-status--${status}`}>{label(STATUS_LABELS_AR, status)}</span>
-                      <span className="sr-type">{label(TENDER_TYPE_LABELS_AR, tender.tender_type)}</span>
+                      <span className={`sr-status sr-status--${status}`}>{label(statusLabels, status, fallback)}</span>
+                      <span className="sr-type">{label(typeLabels, tender.tender_type, fallback)}</span>
                     </div>
-                    {deadlineState.isClosingSoon ? <span className="sr-deadline-badge sr-deadline-badge--map">تنتهي قريبًا</span> : null}
+                    {deadlineState.isClosingSoon ? <span className="sr-deadline-badge sr-deadline-badge--map">{isArabic ? "تنتهي قريبًا" : "Closing soon"}</span> : null}
                     <h3>{title}</h3>
                     <p>{organization}</p>
                     <div className="sr-map-card__meta">
-                      <span>{tender.governorate || "غير محدد"}</span>
-                      <span className={deadlineState.isClosingSoon ? "sr-deadline-text" : ""}>{formatDate(tender.deadline)}</span>
+                      <span>{governorate}</span>
+                      <span className={deadlineState.isClosingSoon ? "sr-deadline-text" : ""}>{formatDate(tender.deadline, dateLocale)}</span>
                     </div>
-                    {tender.id ? (
-                      <Link className="sr-map-card__link" href={`/tenders/${tender.id}`}>
-                        عرض التفاصيل
-                      </Link>
-                    ) : null}
+                    {tender.id ? <Link className="sr-map-card__link" href={`/tenders/${tender.id}`}>{isArabic ? "عرض التفاصيل" : "View details"}</Link> : null}
                   </div>
                 </Popup>
               </Marker>
@@ -123,22 +135,19 @@ export default function TenderMap({ tenders }: { tenders: Tender[] }) {
         </MapContainer>
       </div>
 
-      <div className="sr-map-list" aria-label="قائمة مختصرة للمناقصات على الخريطة">
+      <div className="sr-map-list" aria-label={isArabic ? "قائمة مختصرة للمناقصات على الخريطة" : "Compact tender list for the map"}>
         {mapTenders.map(({ tender, coords, deadlineState }) => {
-          const title = tender.title_ar || tender.title_en || "مناقصة دون عنوان";
+          const title = isArabic ? tender.title_ar || tender.title_en || "مناقصة دون عنوان" : tender.title_en || tender.title_ar || "Untitled tender";
           const status = deadlineState.displayStatus || "open";
+          const governorate = isArabic ? tender.governorate || fallback : GOVERNORATE_LABELS_EN[tender.governorate] || tender.governorate || fallback;
           return (
-            <Link
-              className={deadlineState.isClosingSoon ? "sr-map-list-card sr-map-list-card--closing-soon" : "sr-map-list-card"}
-              href={`/tenders/${tender.id}`}
-              key={tender.id || title}
-            >
+            <Link className={deadlineState.isClosingSoon ? "sr-map-list-card sr-map-list-card--closing-soon" : "sr-map-list-card"} href={`/tenders/${tender.id}`} key={tender.id || title}>
               <span className={`sr-map-dot sr-map-dot--${status} ${deadlineState.isClosingSoon ? "sr-map-dot--closing-soon" : ""}`} />
               <div>
                 <strong>{title}</strong>
                 <small>
-                  {deadlineState.isClosingSoon ? "تنتهي قريبًا · " : ""}
-                  {tender.governorate || "غير محدد"} · {formatDate(tender.deadline)} · {coords[0].toFixed(2)}, {coords[1].toFixed(2)}
+                  {deadlineState.isClosingSoon ? `${isArabic ? "تنتهي قريبًا" : "Closing soon"} · ` : ""}
+                  {governorate} · {formatDate(tender.deadline, dateLocale)} · {coords[0].toFixed(2)}, {coords[1].toFixed(2)}
                 </small>
               </div>
             </Link>
