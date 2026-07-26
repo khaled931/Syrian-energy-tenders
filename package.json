@@ -10,6 +10,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@fontsource/cantora-one": "5.2.8",
+    "@fontsource/noto-naskh-arabic": "5.2.11",
     "firebase": ">=11 <13",
     "firebase-admin": ">=13 <14",
     "leaflet": ">=1.9 <2",
