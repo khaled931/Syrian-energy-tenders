@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import type { PlatformLocale } from "@/lib/platform";
 
-export default function ShareButton({ title }: { title: string }) {
+export default function ShareButton({ title, locale }: { title: string; locale: PlatformLocale }) {
   const [message, setMessage] = useState("");
+  const isArabic = locale === "ar";
 
   async function handleShare() {
     const url = window.location.href;
@@ -13,10 +15,10 @@ export default function ShareButton({ title }: { title: string }) {
         return;
       }
       await navigator.clipboard.writeText(url);
-      setMessage("تم نسخ الرابط");
+      setMessage(isArabic ? "تم نسخ الرابط" : "Link copied");
       setTimeout(() => setMessage(""), 1800);
     } catch {
-      setMessage("تعذر تنفيذ المشاركة");
+      setMessage(isArabic ? "تعذر تنفيذ المشاركة" : "Unable to share");
       setTimeout(() => setMessage(""), 1800);
     }
   }
@@ -24,7 +26,7 @@ export default function ShareButton({ title }: { title: string }) {
   return (
     <div className="sr-share-wrap">
       <button className="sr-button sr-button--primary" type="button" onClick={handleShare}>
-        مشاركة المناقصة
+        {isArabic ? "مشاركة المناقصة" : "Share tender"}
       </button>
       {message ? <span className="sr-share-message">{message}</span> : null}
     </div>
