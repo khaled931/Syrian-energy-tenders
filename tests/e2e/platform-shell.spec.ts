@@ -12,10 +12,12 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
     "src",
     `${MAIN_SITE}/brand/syrian-renewables-logo-fixed.svg`,
   );
-  await expect(page.getByRole("link", { name: "أخبار الطاقة في سورية" })).toHaveAttribute("href", `${MAIN_SITE}/ar/news`);
 
-  const services = page.getByRole("button", { name: "خدماتنا" });
-  const tenderLink = page.getByRole("link", { name: "متتبع مناقصات الطاقة" });
+  const arabicNavigation = page.getByRole("navigation", { name: "التنقل الرئيسي" });
+  await expect(arabicNavigation.getByRole("link", { name: "أخبار الطاقة في سورية" })).toHaveAttribute("href", `${MAIN_SITE}/ar/news`);
+
+  const services = arabicNavigation.getByRole("button", { name: "خدماتنا" });
+  const tenderLink = arabicNavigation.getByRole("link", { name: "متتبع مناقصات الطاقة" });
   await expect(tenderLink).not.toBeVisible();
   await services.click();
   await expect(tenderLink).toBeVisible();
@@ -38,7 +40,9 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
   await expect(html).toHaveAttribute("dir", "ltr");
   await expect(html).toHaveAttribute("lang", "en");
   await expect(page.getByRole("heading", { name: "Energy Tenders" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Syria Energy News" })).toHaveAttribute("href", `${MAIN_SITE}/en/news`);
+
+  const englishNavigation = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(englishNavigation.getByRole("link", { name: "Syria Energy News" })).toHaveAttribute("href", `${MAIN_SITE}/en/news`);
   await expect(page.getByText("Norway organization no. 920833128")).toBeVisible();
 });
 
@@ -50,10 +54,11 @@ test("mobile menu and filters remain click-driven and dismissible", async ({ pag
   await expect(menuButton).toBeVisible();
   await menuButton.click();
 
-  const services = page.getByRole("button", { name: "خدماتنا" });
+  const navigation = page.getByRole("navigation", { name: "التنقل الرئيسي" });
+  const services = navigation.getByRole("button", { name: "خدماتنا" });
   await expect(services).toBeVisible();
   await services.click();
-  const tenderLink = page.getByRole("link", { name: "متتبع مناقصات الطاقة" });
+  const tenderLink = navigation.getByRole("link", { name: "متتبع مناقصات الطاقة" });
   await expect(tenderLink).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("mobile-services-ar.png"), fullPage: true });
 
