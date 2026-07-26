@@ -87,6 +87,25 @@ export const GOVERNORATES_AR = [
   "غير محدد",
 ];
 
+export const GOVERNORATE_LABELS_EN: Record<string, string> = {
+  "دمشق": "Damascus",
+  "ريف دمشق": "Rif Dimashq",
+  "حلب": "Aleppo",
+  "حمص": "Homs",
+  "حماة": "Hama",
+  "اللاذقية": "Latakia",
+  "طرطوس": "Tartus",
+  "إدلب": "Idlib",
+  "درعا": "Daraa",
+  "السويداء": "As-Suwayda",
+  "القنيطرة": "Quneitra",
+  "دير الزور": "Deir ez-Zor",
+  "الرقة": "Raqqa",
+  "الحسكة": "Al-Hasakah",
+  "كل سورية": "All Syria",
+  "غير محدد": "Not specified",
+};
+
 export const ENERGY_TYPES_AR = [
   "كهرباء",
   "طاقة شمسية",
@@ -99,6 +118,19 @@ export const ENERGY_TYPES_AR = [
   "بنية تحتية",
   "أخرى",
 ];
+
+export const ENERGY_TYPE_LABELS_EN: Record<string, string> = {
+  "كهرباء": "Electricity",
+  "طاقة شمسية": "Solar energy",
+  "طاقة رياح": "Wind energy",
+  "طاقة كهرومائية": "Hydropower",
+  "بطاريات وتخزين": "Batteries and storage",
+  "كفاءة الطاقة": "Energy efficiency",
+  "نفط وغاز": "Oil and gas",
+  "هيدروجين": "Hydrogen",
+  "بنية تحتية": "Infrastructure",
+  "أخرى": "Other",
+};
 
 export const DATA_QUALITY_OPTIONS: DataQuality[] = [
   "Verified",
@@ -137,7 +169,7 @@ export function normalizeDate(value?: TimestampLike): Date | null {
 
 export function formatDate(value?: TimestampLike, locale = "ar-SY"): string {
   const date = normalizeDate(value);
-  if (!date) return "غير محدد";
+  if (!date) return locale.startsWith("en") ? "Not specified" : "غير محدد";
   return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" }).format(date);
 }
 
