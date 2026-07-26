@@ -46,6 +46,20 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
   await expect(page.getByText("Norway organization no. 920833128")).toBeVisible();
 });
 
+test("locale entry routes resolve without a 404 and persist the requested language", async ({ page }) => {
+  await page.goto("/en");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await expect(page.getByRole("heading", { name: "Energy Tenders" })).toBeVisible();
+
+  await page.goto("/ar");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page.getByRole("heading", { name: "مناقصات الطاقة" })).toBeVisible();
+});
+
 test("mobile menu and filters remain click-driven and dismissible", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
