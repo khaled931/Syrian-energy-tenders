@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const MAIN_SITE = "https://syrian-renewables-web.vercel.app";
+const MAIN_SITE = "https://www.syrian-renewables.com";
 
 test("desktop shell, navigation, locale and theme controls", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1280, height: 900 });
