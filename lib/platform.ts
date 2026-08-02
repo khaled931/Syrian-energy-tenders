@@ -9,7 +9,7 @@ export interface PlatformNavigationItem {
   children?: PlatformNavigationItem[];
 }
 
-export const PLATFORM_MAIN_SITE = "https://syrian-renewables-web.vercel.app";
+export const PLATFORM_MAIN_SITE = "https://www.syrian-renewables.com";
 export const PLATFORM_LOGO = `${PLATFORM_MAIN_SITE}/brand/syrian-renewables-logo-fixed.svg`;
 
 export const platformBrand = {
