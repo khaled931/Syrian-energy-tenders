@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const MAIN_SITE = "https://www.syrian-renewables.com";
+const MAIN_SITE = "https://syrianrenewables.com";
 
 test("desktop shell, navigation, locale and theme controls", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -21,7 +21,9 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
   await expect(tenderLink).not.toBeVisible();
   await services.click();
   await expect(tenderLink).toBeVisible();
-  await expect(tenderLink).toHaveAttribute("href", "https://syrian-energy-tenders.vercel.app/");
+  await expect(tenderLink).toHaveAttribute("href", "https://tender.syrianrenewables.com/");
+  await expect(arabicNavigation.getByRole("link", { name: "سوق الطاقة" })).toHaveAttribute("href", "https://market.syrianrenewables.com");
+  await expect(arabicNavigation.getByRole("link", { name: "اتفاقيات وعقود الطاقة" })).toHaveAttribute("href", "https://contracts.syrianrenewables.com");
   await page.screenshot({ path: testInfo.outputPath("desktop-services-ar.png"), fullPage: true });
 
   await page.keyboard.press("Escape");
@@ -29,6 +31,16 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
   await services.click();
   await page.locator("main").click({ position: { x: 10, y: 10 } });
   await expect(tenderLink).not.toBeVisible();
+
+  const usefulTools = arabicNavigation.getByRole("button", { name: "أدوات مفيدة" });
+  await usefulTools.click();
+  await expect(arabicNavigation.getByRole("link", { name: "حاسبة الطاقة الشمسية" })).toHaveAttribute("href", "https://solarist.syrianrenewables.com/");
+  await page.keyboard.press("Escape");
+
+  const footerLogoBox = await page.locator(".sr-platform-footer-logo").boundingBox();
+  expect(footerLogoBox).not.toBeNull();
+  expect(footerLogoBox?.width ?? 999).toBeLessThanOrEqual(120);
+  expect(footerLogoBox?.height ?? 999).toBeLessThanOrEqual(150);
 
   const html = page.locator("html");
   await expect(html).toHaveAttribute("data-theme", /light|dark/);
@@ -60,7 +72,7 @@ test("locale entry routes resolve without a 404 and persist the requested langua
   await expect(page.getByRole("heading", { name: "مناقصات الطاقة" })).toBeVisible();
 });
 
-test("mobile menu and filters remain click-driven and dismissible", async ({ page }, testInfo) => {
+test("mobile menu and filters remain responsive, dismissible and overflow-free", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
@@ -74,6 +86,7 @@ test("mobile menu and filters remain click-driven and dismissible", async ({ pag
   await services.click();
   const tenderLink = navigation.getByRole("link", { name: "متتبع مناقصات الطاقة" });
   await expect(tenderLink).toBeVisible();
+  await expect(tenderLink).toHaveAttribute("href", "https://tender.syrianrenewables.com/");
   await page.screenshot({ path: testInfo.outputPath("mobile-services-ar.png"), fullPage: true });
 
   await page.keyboard.press("Escape");
@@ -83,4 +96,7 @@ test("mobile menu and filters remain click-driven and dismissible", async ({ pag
   await expect(page.getByRole("complementary", { name: "فلاتر البحث" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("complementary", { name: "فلاتر البحث" })).not.toBeVisible();
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
