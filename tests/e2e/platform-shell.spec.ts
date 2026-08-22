@@ -1,8 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const MAIN_SITE = "https://syrianrenewables.com";
 
+function monitorBrowserErrors(page: Page) {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(`console: ${message.text()}`);
+  });
+  return errors;
+}
+
 test("desktop shell, navigation, locale and theme controls", async ({ page }, testInfo) => {
+  const browserErrors = monitorBrowserErrors(page);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
 
@@ -56,9 +66,11 @@ test("desktop shell, navigation, locale and theme controls", async ({ page }, te
   const englishNavigation = page.getByRole("navigation", { name: "Main navigation" });
   await expect(englishNavigation.getByRole("link", { name: "Syria Energy News" })).toHaveAttribute("href", `${MAIN_SITE}/en/news`);
   await expect(page.getByText("Norway organization no. 920833128")).toBeVisible();
+  expect(browserErrors, "desktop flow should not emit browser console/page errors").toEqual([]);
 });
 
 test("locale entry routes resolve without a 404 and persist the requested language", async ({ page }) => {
+  const browserErrors = monitorBrowserErrors(page);
   await page.goto("/en");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
@@ -70,9 +82,11 @@ test("locale entry routes resolve without a 404 and persist the requested langua
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.getByRole("heading", { name: "مناقصات الطاقة" })).toBeVisible();
+  expect(browserErrors, "locale entry flows should not emit browser console/page errors").toEqual([]);
 });
 
 test("mobile menu and filters remain responsive, dismissible and overflow-free", async ({ page }, testInfo) => {
+  const browserErrors = monitorBrowserErrors(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
@@ -99,4 +113,5 @@ test("mobile menu and filters remain responsive, dismissible and overflow-free",
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+  expect(browserErrors, "mobile flow should not emit browser console/page errors").toEqual([]);
 });
