@@ -9,7 +9,7 @@ export interface PlatformNavigationItem {
   children?: PlatformNavigationItem[];
 }
 
-export const PLATFORM_MAIN_SITE = "https://www.syrian-renewables.com";
+export const PLATFORM_MAIN_SITE = "https://syrianrenewables.com";
 export const PLATFORM_LOGO = `${PLATFORM_MAIN_SITE}/brand/syrian-renewables-logo-fixed.svg`;
 
 export const platformBrand = {
@@ -46,12 +46,26 @@ export const platformNavigation: PlatformNavigationItem[] = [
     key: "services",
     label: { ar: "خدماتنا", en: "Our Services" },
     children: [
-      { key: "project-tracker", href: "https://projects.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع مشاريع الطاقة", en: "Energy Project Tracker" } },
+      { key: "emissions-climate", href: "https://climate.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "الانبعاثات والمناخ", en: "Emissions and Climate" } },
+      { key: "reports-research", href: "/reports", label: { ar: "التقارير والأبحاث", en: "Reports and Research" } },
       { key: "ev-map", href: "https://ev.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "خريطة شواحن السيارات الكهربائية", en: "EV Charging Map" } },
+      { key: "fuel-price-tracker", href: "https://fuel-prices.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع أسعار الوقود في سورية", en: "Syrian Fuel Price Tracker" } },
       { key: "policy-tracker", href: "https://policies.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع سياسات الطاقة", en: "Energy Policy Tracker" } },
-      { key: "energy-tenders", href: "https://syrian-energy-tenders.vercel.app/", external: true, label: { ar: "متتبع مناقصات الطاقة", en: "Energy Tenders Tracker" } },
-      { key: "ninja-simulator", href: "https://syr-res-ninja-app.vercel.app/", external: true, openInNewTab: true, label: { ar: "محاكاة الطاقة الشمسية والريحية في سورية", en: "Solar and Wind Energy Simulation in Syria" } },
+      { key: "project-tracker", href: "https://projects.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع مشاريع الطاقة", en: "Energy Project Tracker" } },
+      { key: "energy-tenders", href: "https://tender.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع مناقصات الطاقة", en: "Energy Tenders Tracker" } },
       { key: "major-projects", href: "https://major-projects.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "مشاريع كبرى", en: "Major Projects" } },
+      { key: "energy-jobs", href: "https://syr-res-jobs.vercel.app/", external: true, openInNewTab: true, label: { ar: "وظائف الطاقة", en: "Energy Jobs" } },
+      { key: "energy-contracts", href: "https://contracts.syrianrenewables.com", external: true, openInNewTab: false, label: { ar: "اتفاقيات وعقود الطاقة", en: "Energy Agreements & Contracts" } },
+      { key: "energy-market", href: "https://market.syrianrenewables.com", external: true, openInNewTab: false, label: { ar: "سوق الطاقة", en: "Energy Market" } },
+    ],
+  },
+  {
+    key: "useful-tools",
+    label: { ar: "أدوات مفيدة", en: "Useful Tools" },
+    children: [
+      { key: "solar-calculator", href: "https://solarist.syrianrenewables.com/", external: true, openInNewTab: false, label: { ar: "حاسبة الطاقة الشمسية", en: "Solar Energy Calculator" } },
+      { key: "power-plant-map", href: "https://syr-res-power-plant-map.vercel.app/", external: true, openInNewTab: true, label: { ar: "خرائط محطات الطاقة", en: "Power Plant Maps" } },
+      { key: "ninja-simulator", href: "https://syr-res-ninja-app.vercel.app/", external: true, openInNewTab: true, label: { ar: "محاكاة الطاقة الشمسية والريحية في سورية", en: "Solar and Wind Energy Simulation in Syria" } },
     ],
   },
   {
