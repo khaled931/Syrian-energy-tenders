@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type SVGProps } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode, type SVGProps } from "react";
 import {
   PLATFORM_LOGO,
   PLATFORM_MAIN_SITE,
@@ -49,10 +49,25 @@ const socialMarks: Record<string, string> = {
   whatsapp: "WA",
 };
 
+function prepareNavigation(items: PlatformNavigationItem[], locale: PlatformLocale) {
+  const collator = new Intl.Collator(locale === "ar" ? "ar" : "en", {
+    usage: "sort",
+    sensitivity: "base",
+    ignorePunctuation: true,
+  });
+
+  return items.map((item) => {
+    if (item.key !== "services" || !item.children?.length) return item;
+    return {
+      ...item,
+      children: [...item.children].sort((a, b) => collator.compare(a.label[locale], b.label[locale])),
+    };
+  });
+}
+
 function OfficialLogo({ footer = false }: { footer?: boolean }) {
   return (
     <span className={footer ? "sr-platform-footer-logo" : "sr-platform-logo-plate"}>
-      {/* The exact canonical asset is served by the new main website; the local legacy asset is only a network fallback. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={PLATFORM_LOGO}
@@ -72,6 +87,7 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const navigation = useMemo(() => prepareNavigation(platformNavigation, locale), [locale]);
 
   function closeNavigation() {
     setMobileOpen(false);
@@ -146,7 +162,7 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
         </a>
 
         <nav id="sr-primary-navigation" className={`sr-platform-nav ${mobileOpen ? "is-open" : ""}`} aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
-          {platformNavigation.map((item, index) => {
+          {navigation.map((item, index) => {
             const submenuId = item.children?.length ? `sr-platform-submenu-${index}` : undefined;
             const expanded = expandedKey === item.key;
             return (
@@ -198,13 +214,7 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
 }
 
 function PlatformFooter({ locale }: { locale: PlatformLocale }) {
-  const footerLinks = [
-    { href: "/", label: { ar: "الصفحة الرئيسية", en: "Home" } },
-    { href: "/news", label: { ar: "أخبار الطاقة في سورية", en: "Syria Energy News" } },
-    { href: "/about-us", label: { ar: "من نحن", en: "Who We Are" } },
-    { href: "/contact", label: { ar: "تواصل معنا", en: "Contact Us" } },
-    { href: "/privacy-policy", label: { ar: "سياسة الخصوصية", en: "Privacy Policy" } },
-  ];
+  const footerLinks = platformNavigation.filter((item) => Boolean(item.href)).slice(0, 7);
 
   return (
     <footer className="sr-platform-footer">
@@ -218,7 +228,8 @@ function PlatformFooter({ locale }: { locale: PlatformLocale }) {
         <section>
           <h3>{locale === "ar" ? "روابط المنصة" : "Platform"}</h3>
           <div className="sr-platform-footer-links">
-            {footerLinks.map((item) => <a key={item.href} href={resolvePlatformHref(item.href, locale)}>{item.label[locale]}</a>)}
+            {footerLinks.map((item) => <a key={item.key} href={resolvePlatformHref(item.href as string, locale)}>{item.label[locale]}</a>)}
+            <a href={resolvePlatformHref("/events", locale)}>{locale === "ar" ? "أحداث ومواعيد هامة" : "Important Events and Dates"}</a>
           </div>
         </section>
 
