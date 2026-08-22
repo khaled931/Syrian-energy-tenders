@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import type { PlatformLocale } from "@/lib/platform";
 import {
   formatDate,
@@ -41,6 +42,8 @@ const GOVERNORATE_COORDINATES: Record<string, [number, number]> = {
   "غير محدد": [34.8021, 38.9968],
 };
 
+const markerIconCache = new Map<string, L.DivIcon>();
+
 function safeNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -76,14 +79,50 @@ function label(map: Record<string, string>, value: string | undefined, fallback:
   return map[value] || value;
 }
 
-function createMarker(status?: string, isClosingSoon = false) {
-  return L.divIcon({
+function getMarkerIcon(status?: string, isClosingSoon = false) {
+  const key = `${status || "open"}:${isClosingSoon ? "closing" : "normal"}`;
+  const cached = markerIconCache.get(key);
+  if (cached) return cached;
+
+  const icon = L.divIcon({
     className: "sr-map-marker-wrap",
     html: `<span class="sr-map-marker sr-map-marker--${status || "open"} ${isClosingSoon ? "sr-map-marker--closing-soon" : ""}"></span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
     popupAnchor: [0, -12],
   });
+  markerIconCache.set(key, icon);
+  return icon;
+}
+
+function MapInteractionController({ coarsePointer, interactionEnabled }: { coarsePointer: boolean; interactionEnabled: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!coarsePointer) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      return;
+    }
+
+    map.scrollWheelZoom.disable();
+    map.keyboard.disable();
+    map.boxZoom.disable();
+
+    if (interactionEnabled) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+    }
+  }, [coarsePointer, interactionEnabled, map]);
+
+  return null;
 }
 
 export default function TenderMap({ tenders, locale }: { tenders: Tender[]; locale: PlatformLocale }) {
@@ -92,19 +131,63 @@ export default function TenderMap({ tenders, locale }: { tenders: Tender[]; loca
   const statusLabels = isArabic ? STATUS_LABELS_AR : STATUS_LABELS_EN;
   const typeLabels = isArabic ? TENDER_TYPE_LABELS_AR : TENDER_TYPE_LABELS_EN;
   const dateLocale = isArabic ? "ar-SY" : "en-GB";
-  const mapTenders = tenders.map((tender) => ({
+  const [coarsePointer, setCoarsePointer] = useState(false);
+  const [interactionEnabled, setInteractionEnabled] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(pointer: coarse)");
+    const update = () => {
+      setCoarsePointer(media.matches);
+      if (!media.matches) setInteractionEnabled(false);
+    };
+    update();
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
+  }, []);
+
+  const mapTenders = useMemo(() => tenders.map((tender) => ({
     tender,
     deadlineState: getTenderDeadlineState(tender),
     coords: getTenderCoordinates(tender as TenderWithCoordinates),
-  }));
+  })), [tenders]);
 
   return (
     <section className="sr-map-shell" aria-label={isArabic ? "خريطة المناقصات والعروض في سورية" : "Map of tenders and offers in Syria"}>
       <div className="sr-map-panel">
-        <MapContainer center={[34.8021, 38.9968]} zoom={6} minZoom={5} maxZoom={13} scrollWheelZoom className="sr-map">
+        {coarsePointer ? (
+          <button
+            className={interactionEnabled ? "sr-map-touch-toggle is-active" : "sr-map-touch-toggle"}
+            type="button"
+            aria-pressed={interactionEnabled}
+            onClick={() => setInteractionEnabled((current) => !current)}
+          >
+            {interactionEnabled
+              ? (isArabic ? "إنهاء تحريك الخريطة" : "Release page scroll")
+              : (isArabic ? "تفعيل تحريك الخريطة" : "Enable map interaction")}
+          </button>
+        ) : null}
+
+        <MapContainer
+          center={[34.8021, 38.9968]}
+          zoom={6}
+          minZoom={5}
+          maxZoom={13}
+          scrollWheelZoom={!coarsePointer}
+          dragging={!coarsePointer}
+          touchZoom={!coarsePointer}
+          zoomAnimation={!coarsePointer}
+          fadeAnimation={!coarsePointer}
+          markerZoomAnimation={!coarsePointer}
+          preferCanvas
+          className={`sr-map ${coarsePointer && !interactionEnabled ? "sr-map--scroll-safe" : ""}`}
+        >
+          <MapInteractionController coarsePointer={coarsePointer} interactionEnabled={interactionEnabled} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            updateWhenIdle={coarsePointer}
+            updateWhenZooming={!coarsePointer}
+            keepBuffer={coarsePointer ? 1 : 2}
           />
           {mapTenders.map(({ tender, coords, deadlineState }) => {
             const title = isArabic ? tender.title_ar || tender.title_en || "مناقصة دون عنوان" : tender.title_en || tender.title_ar || "Untitled tender";
@@ -112,7 +195,7 @@ export default function TenderMap({ tenders, locale }: { tenders: Tender[]; loca
             const status = deadlineState.displayStatus || "open";
             const governorate = isArabic ? tender.governorate || fallback : GOVERNORATE_LABELS_EN[tender.governorate] || tender.governorate || fallback;
             return (
-              <Marker key={tender.id || title} position={coords} icon={createMarker(status, deadlineState.isClosingSoon)}>
+              <Marker key={tender.id || title} position={coords} icon={getMarkerIcon(status, deadlineState.isClosingSoon)}>
                 <Popup className="sr-map-popup">
                   <div className={deadlineState.isClosingSoon ? "sr-map-card sr-map-card--closing-soon" : "sr-map-card"} dir={isArabic ? "rtl" : "ltr"}>
                     <div className="sr-map-card__tags">
