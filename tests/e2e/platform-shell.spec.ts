@@ -85,6 +85,30 @@ test("locale entry routes resolve without a 404 and persist the requested langua
   expect(browserErrors, "locale entry flows should not emit browser console/page errors").toEqual([]);
 });
 
+test("tablet shell remains usable and overflow-free", async ({ page }, testInfo) => {
+  const browserErrors = monitorBrowserErrors(page);
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "مناقصات الطاقة" })).toBeVisible();
+  const menuButton = page.getByRole("button", { name: "فتح القائمة" });
+  await expect(menuButton).toBeVisible();
+  await menuButton.click();
+
+  const navigation = page.getByRole("navigation", { name: "التنقل الرئيسي" });
+  await expect(navigation).toBeVisible();
+  await navigation.getByRole("button", { name: "أدوات مفيدة" }).click();
+  await expect(navigation.getByRole("link", { name: "حاسبة الطاقة الشمسية" })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("tablet-navigation-ar.png"), fullPage: true });
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#sr-primary-navigation")).not.toBeVisible();
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  expect(browserErrors, "tablet flow should not emit browser console/page errors").toEqual([]);
+});
+
 test("mobile menu and filters remain responsive, dismissible and overflow-free", async ({ page }, testInfo) => {
   const browserErrors = monitorBrowserErrors(page);
   await page.setViewportSize({ width: 390, height: 844 });
