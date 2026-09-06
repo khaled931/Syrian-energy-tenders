@@ -8,7 +8,10 @@ service firebase.storage {
     }
 
     match /tenders/{tenderId}/{allPaths=**} {
-      allow read: if true;
+      // Tender source documents are protected assets. Guest and Free accounts
+      // never receive direct storage access; future paid access must be served
+      // through an authenticated server endpoint with explicit authorization.
+      allow read: if isAdmin();
       allow write: if isAdmin()
         && request.resource.size < 15 * 1024 * 1024
         && request.resource.contentType == 'application/pdf';
