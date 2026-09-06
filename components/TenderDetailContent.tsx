@@ -29,23 +29,62 @@ function Info({ label, value, wide = false, fallback }: { label: string; value?:
   );
 }
 
-export default function TenderDetailContent({ tender, firebaseConfigured }: { tender: Tender | null; firebaseConfigured: boolean }) {
+function accountUrl(locale: "ar" | "en", kind: "login" | "register", returnTo: string) {
+  const url = new URL(`/${locale}/account/${kind}`, "https://syrianrenewables.com");
+  url.searchParams.set("returnTo", returnTo);
+  return url.toString();
+}
+
+export default function TenderDetailContent({
+  tender,
+  firebaseConfigured,
+  gated = false,
+  publicLimit = 5,
+  returnTo = "https://tender.syrianrenewables.com/",
+}: {
+  tender: Tender | null;
+  firebaseConfigured: boolean;
+  gated?: boolean;
+  publicLimit?: number;
+  returnTo?: string;
+}) {
   const { locale } = usePlatform();
   const isArabic = locale === "ar";
   const fallback = isArabic ? "غير محدد" : "Not specified";
   const back = isArabic ? "العودة إلى المناقصات" : "Back to tenders";
+
+  if (gated) {
+    return (
+      <main className="sr-page-shell sr-detail-page">
+        <Link className="sr-back-link" href="/">{back}</Link>
+        <section className="sr-detail-card sr-detail-gate">
+          <span className="sr-eyebrow">Syrian Renewables</span>
+          <h1>{isArabic ? "هذه المناقصة متاحة بعد إنشاء حساب مجاني" : "This tender is available with a free account"}</h1>
+          <p>
+            {isArabic
+              ? `يمكن للزائر الاطلاع على أحدث ${publicLimit} مناقصات. أنشئ حساباً مجانياً للاطلاع على بقية السجلات المنشورة. لا يتطلب الحساب المجاني أي دفع.`
+              : `Visitors can view the latest ${publicLimit} tenders. Create a free account to access the remaining published records. A Free account requires no payment.`}
+          </p>
+          <div className="sr-detail-actions">
+            <a className="sr-button sr-button--primary" href={accountUrl(locale, "register", returnTo)}>
+              {isArabic ? "إنشاء حساب مجاني" : "Create free account"}
+            </a>
+            <a className="sr-button sr-button--ghost" href={accountUrl(locale, "login", returnTo)}>
+              {isArabic ? "تسجيل الدخول" : "Sign in"}
+            </a>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   if (!firebaseConfigured) {
     return (
       <main className="sr-page-shell sr-detail-page">
         <Link className="sr-back-link" href="/">{back}</Link>
         <section className="sr-detail-card">
-          <h1>{isArabic ? "إعدادات Firebase Admin غير مكتملة" : "Firebase Admin configuration is incomplete"}</h1>
-          <p>
-            {isArabic
-              ? "لعرض صفحات التفاصيل بطريقة مناسبة للمشاركة وSEO، أضف متغيرات FIREBASE_PROJECT_ID وFIREBASE_CLIENT_EMAIL وFIREBASE_PRIVATE_KEY إلى Vercel."
-              : "To render shareable, SEO-ready detail pages, add FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY to Vercel."}
-          </p>
+          <h1>{isArabic ? "تعذر تحميل تفاصيل المناقصة" : "Tender details are unavailable"}</h1>
+          <p>{isArabic ? "تعذر الوصول إلى خدمة البيانات حالياً. حاول مرة أخرى لاحقاً." : "The data service is currently unavailable. Please try again later."}</p>
         </section>
       </main>
     );
@@ -111,12 +150,8 @@ export default function TenderDetailContent({ tender, firebaseConfigured }: { te
         ) : null}
 
         <div className="sr-detail-actions">
-          {tender.source_url ? <a className="sr-button sr-button--primary" href={tender.source_url} target="_blank" rel="noopener noreferrer">{isArabic ? "رابط المصدر" : "Source link"}</a> : null}
-          {tender.pdf_url ? <a className="sr-button sr-button--ghost" href={tender.pdf_url} target="_blank" rel="noopener noreferrer">{isArabic ? "تحميل دفتر الشروط PDF" : "Download tender PDF"}</a> : null}
           <ShareButton title={title} locale={locale} />
         </div>
-
-        {tender.notes ? <p className="sr-notes">{isArabic ? "ملاحظات" : "Notes"}: {tender.notes}</p> : null}
       </article>
     </main>
   );
