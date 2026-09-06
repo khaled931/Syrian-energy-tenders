@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import type { DocumentData } from "firebase-admin/firestore";
 import TenderDetailContent from "@/components/TenderDetailContent";
-import { getAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
-import { normalizeDate, Tender } from "@/lib/types";
+import { resolveCentralAccess } from "@/lib/centralAccess";
+import { isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
+import { getTender, isTenderInPublicSample } from "@/lib/tendersServer";
+import { normalizeDate } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -10,32 +11,25 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-function serializeDate(value: unknown): string | undefined {
-  const date = normalizeDate(value as never);
-  return date ? date.toISOString() : undefined;
-}
-
-function serializeTender(id: string, data: DocumentData): Tender {
-  return {
-    id,
-    ...data,
-    announcement_date: serializeDate(data.announcement_date),
-    deadline: serializeDate(data.deadline),
-    created_at: serializeDate(data.created_at),
-    updated_at: serializeDate(data.updated_at),
-  } as Tender;
-}
-
-async function getTender(id: string): Promise<Tender | null> {
-  if (!isFirebaseAdminConfigured()) return null;
-  const snapshot = await getAdminDb().collection("tenders").doc(id).get();
-  if (!snapshot.exists) return null;
-  return serializeTender(snapshot.id, snapshot.data() || {});
+async function resolveTenderPage(id: string) {
+  const access = await resolveCentralAccess("energy_tenders", "ar", 5);
+  const publicSample = access.allowed ? true : await isTenderInPublicSample(id, access.guestItemLimit);
+  const tender = publicSample ? await getTender(id) : null;
+  return { access, publicSample, tender };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const tender = await getTender(id);
+  const { publicSample, tender } = await resolveTenderPage(id);
+
+  if (!publicSample) {
+    return {
+      title: "مناقصة طاقة | Syrian Renewables",
+      description: "أنشئ حساباً مجانياً للاطلاع على تفاصيل هذه المناقصة ضمن متتبع مناقصات الطاقة السوري.",
+      robots: { index: false, follow: true },
+    };
+  }
+
   if (!tender) {
     return {
       title: "تفاصيل مناقصة الطاقة | Syrian Renewables",
@@ -60,7 +54,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TenderDetailPage({ params }: PageProps) {
   const { id } = await params;
   const firebaseConfigured = isFirebaseAdminConfigured();
-  const tender = await getTender(id);
+  const { access, publicSample, tender } = firebaseConfigured
+    ? await resolveTenderPage(id)
+    : { access: await resolveCentralAccess("energy_tenders", "ar", 5), publicSample: false, tender: null };
+
   const title = tender?.title_ar || tender?.title_en || "Energy tender";
   const jsonLd = tender ? {
     "@context": "https://schema.org",
@@ -70,13 +67,20 @@ export default async function TenderDetailPage({ params }: PageProps) {
     publisher: "Syrian Renewables",
     datePublished: normalizeDate(tender.announcement_date)?.toISOString(),
     expires: normalizeDate(tender.deadline)?.toISOString(),
-    url: tender.source_url,
   } : null;
+
+  const returnTo = `https://tender.syrianrenewables.com/tenders/${encodeURIComponent(id)}`;
 
   return (
     <>
       {jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /> : null}
-      <TenderDetailContent tender={tender} firebaseConfigured={firebaseConfigured} />
+      <TenderDetailContent
+        tender={tender}
+        firebaseConfigured={firebaseConfigured}
+        gated={!access.allowed && !publicSample}
+        publicLimit={access.guestItemLimit}
+        returnTo={returnTo}
+      />
     </>
   );
 }
