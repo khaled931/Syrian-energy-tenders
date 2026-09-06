@@ -8,15 +8,45 @@ function serializeDate(value: unknown): string | undefined {
   return date ? date.toISOString() : undefined;
 }
 
+/**
+ * Build the exact client-facing tender representation.
+ *
+ * This is intentionally a whitelist rather than an omit-list. Any future
+ * provenance, source, attachment, raw-data, research-note, or internal field
+ * added to Firestore will therefore remain server-only unless it is reviewed
+ * and explicitly added here.
+ */
 export function serializeTender(id: string, data: DocumentData): Tender {
   return {
     id,
-    ...data,
+    title_ar: String(data.title_ar || ""),
+    title_en: data.title_en ? String(data.title_en) : undefined,
+    organization_ar: String(data.organization_ar || ""),
+    organization_en: data.organization_en ? String(data.organization_en) : undefined,
+    energy_type: String(data.energy_type || ""),
+    tender_type: String(data.tender_type || ""),
+    governorate: String(data.governorate || ""),
+    location: data.location ? String(data.location) : undefined,
+    capacity: data.capacity ? String(data.capacity) : undefined,
     announcement_date: serializeDate(data.announcement_date),
     deadline: serializeDate(data.deadline),
+    status: String(data.status || "open"),
+    document_fee: data.document_fee ? String(data.document_fee) : undefined,
+    currency: data.currency ? String(data.currency) : undefined,
+    submission_method: data.submission_method ? String(data.submission_method) : undefined,
+    summary_ar: data.summary_ar ? String(data.summary_ar) : undefined,
+    summary_en: data.summary_en ? String(data.summary_en) : undefined,
+    description_ar: data.description_ar ? String(data.description_ar) : undefined,
+    description_en: data.description_en ? String(data.description_en) : undefined,
+    requirements: Array.isArray(data.requirements)
+      ? data.requirements.filter((item: unknown) => typeof item === "string")
+      : typeof data.requirements === "string"
+        ? data.requirements
+        : undefined,
+    data_quality: data.data_quality ? String(data.data_quality) : undefined,
     created_at: serializeDate(data.created_at),
     updated_at: serializeDate(data.updated_at),
-  } as Tender;
+  };
 }
 
 export async function getTender(id: string): Promise<Tender | null> {
