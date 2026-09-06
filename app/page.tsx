@@ -1,11 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
+import MembershipNotice from "@/components/MembershipNotice";
 import TenderCard from "@/components/TenderCard";
 import { usePlatform } from "@/components/PlatformShell";
-import { db, isFirebaseConfigured } from "@/lib/firebase";
 import {
   ENERGY_TYPES_AR,
   ENERGY_TYPE_LABELS_EN,
@@ -20,6 +19,20 @@ import {
 
 const TenderMap = dynamic(() => import("@/components/TenderMap"), { ssr: false });
 
+type AccessState = {
+  fullAccess: boolean;
+  authenticated: boolean;
+  guestItemLimit: number;
+  loginUrl: string;
+  registerUrl: string;
+  reason: string;
+};
+
+type TendersPayload = {
+  tenders?: Tender[];
+  access?: Partial<AccessState>;
+};
+
 const copy = {
   ar: {
     title: "مناقصات الطاقة",
@@ -28,7 +41,7 @@ const copy = {
     list: "قائمة المناقصات",
     map: "خريطة المناقصات والعروض",
     view: "طريقة عرض المناقصات",
-    description: "منصة معلوماتية مختصرة لتتبع مناقصات ومزايدات وعروض الطاقة في سورية، مع روابط المصادر ودفاتر الشروط عند توفرها.",
+    description: "منصة معلوماتية مختصرة لتتبع مناقصات ومزايدات وعروض الطاقة في سورية. تُعرض البيانات المنظمة وفق مستوى الوصول، بينما تبقى المصادر والملفات الأصلية محمية.",
     searchLabel: "بحث في المناقصات",
     searchPlaceholder: "ابحث باسم المناقصة أو الجهة...",
     filtersTitle: "فلاتر البحث",
@@ -46,8 +59,7 @@ const copy = {
     results: "النتائج",
     published: "فرصة منشورة",
     loading: "جار تحميل المناقصات...",
-    firebase: "لم يتم ضبط إعدادات Firebase بعد. أضف متغيرات البيئة ثم أعد النشر.",
-    loadError: "تعذر تحميل المناقصات.",
+    loadError: "تعذر تحميل المناقصات حالياً. حاول مرة أخرى لاحقاً.",
     empty: "لا توجد مناقصات مطابقة حالياً.",
     listLabel: "قائمة المناقصات",
   },
@@ -58,7 +70,7 @@ const copy = {
     list: "Tender list",
     map: "Tenders and offers map",
     view: "Tender display mode",
-    description: "A concise information platform tracking energy tenders, auctions, and offers in Syria, with source links and tender documents when available.",
+    description: "A concise information platform tracking energy tenders, auctions, and offers in Syria. Structured records are shown according to access level, while original sources and files remain protected.",
     searchLabel: "Search tenders",
     searchPlaceholder: "Search by tender title or organization...",
     filtersTitle: "Search filters",
@@ -76,17 +88,33 @@ const copy = {
     results: "Results",
     published: "published opportunities",
     loading: "Loading tenders...",
-    firebase: "Firebase is not configured. Add the required environment variables and redeploy.",
-    loadError: "Unable to load tenders.",
+    loadError: "Unable to load tenders right now. Please try again later.",
     empty: "No matching tenders are currently available.",
     listLabel: "Tender list",
   },
 } as const;
 
+function fallbackAccess(locale: "ar" | "en"): AccessState {
+  const returnTo = `https://tender.syrianrenewables.com/${locale}`;
+  const login = new URL(`/${locale}/account/login`, "https://syrianrenewables.com");
+  const register = new URL(`/${locale}/account/register`, "https://syrianrenewables.com");
+  login.searchParams.set("returnTo", returnTo);
+  register.searchParams.set("returnTo", returnTo);
+  return {
+    fullAccess: false,
+    authenticated: false,
+    guestItemLimit: 5,
+    loginUrl: login.toString(),
+    registerUrl: register.toString(),
+    reason: "access_service_unavailable",
+  };
+}
+
 export default function HomePage() {
   const { locale } = usePlatform();
   const text = copy[locale];
   const [tenders, setTenders] = useState<Tender[]>([]);
+  const [access, setAccess] = useState<AccessState>(() => fallbackAccess(locale));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -98,28 +126,43 @@ export default function HomePage() {
   const [tenderType, setTenderType] = useState("");
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !db) {
-      setLoading(false);
-      setError(text.firebase);
-      return;
+    let active = true;
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch(`/api/tenders?locale=${locale}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`Tender API ${response.status}`);
+        const payload = await response.json() as TendersPayload;
+        if (!active) return;
+        setTenders(Array.isArray(payload.tenders) ? payload.tenders : []);
+        const fallback = fallbackAccess(locale);
+        const incoming = payload.access || {};
+        const limit = Number(incoming.guestItemLimit);
+        setAccess({
+          fullAccess: incoming.fullAccess === true,
+          authenticated: incoming.authenticated === true,
+          guestItemLimit: Number.isSafeInteger(limit) && limit > 0 ? limit : fallback.guestItemLimit,
+          loginUrl: typeof incoming.loginUrl === "string" ? incoming.loginUrl : fallback.loginUrl,
+          registerUrl: typeof incoming.registerUrl === "string" ? incoming.registerUrl : fallback.registerUrl,
+          reason: typeof incoming.reason === "string" ? incoming.reason : fallback.reason,
+        });
+      } catch {
+        if (!active) return;
+        setTenders([]);
+        setAccess(fallbackAccess(locale));
+        setError(text.loadError);
+      } finally {
+        if (active) setLoading(false);
+      }
     }
-
-    const q = query(collection(db, "tenders"), orderBy("created_at", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        setTenders(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Tender));
-        setError("");
-        setLoading(false);
-      },
-      (snapshotError) => {
-        setError(snapshotError.message || text.loadError);
-        setLoading(false);
-      },
-    );
-
-    return () => unsubscribe();
-  }, [text.firebase, text.loadError]);
+    void load();
+    return () => { active = false; };
+  }, [locale, text.loadError]);
 
   useEffect(() => {
     if (!showFilters) return;
@@ -206,6 +249,15 @@ export default function HomePage() {
           </div>
         </section>
       </header>
+
+      {!loading && !access.fullAccess ? (
+        <MembershipNotice
+          locale={locale}
+          limit={access.guestItemLimit}
+          loginUrl={access.loginUrl}
+          registerUrl={access.registerUrl}
+        />
+      ) : null}
 
       {showFilters ? (
         <div className="sr-filter-layer" role="presentation">
