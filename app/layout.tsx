@@ -5,6 +5,7 @@ import "./globals.css";
 import "./platform-shell.css";
 import "./mobile-map.css";
 import "./deadline-warning.css";
+import "./membership.css";
 
 const bootstrapScript = `(() => {
   try {
