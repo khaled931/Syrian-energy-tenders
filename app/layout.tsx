@@ -7,6 +7,7 @@ import "./mobile-map.css";
 import "./deadline-warning.css";
 import "./membership.css";
 import "./admin-panel.css";
+import "./tender-ui-polish.css";
 
 const bootstrapScript = `(() => {
   try {
