@@ -81,7 +81,7 @@ npm run dev
 
 ## متغيرات البيئة على Vercel
 
-أضف القيم التالية في Vercel Project Settings → Environment Variables:
+أضف Web App config:
 
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=
@@ -90,13 +90,25 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+```
 
+ثم أضف إعداد Firebase Admin السيرفري بإحدى الطريقتين التاليتين. الطريقة المفضلة هي متغير JSON واحد:
+
+```bash
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"...","client_email":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"}
+```
+
+أو استخدم المتغيرات المنفصلة:
+
+```bash
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 ```
 
-مهم: قيمة `FIREBASE_PRIVATE_KEY` يجب أن تبقى سرية. لا تضعها داخل GitHub. في Vercel يمكن وضعها بصيغة تحتوي على `\n` بدل الأسطر الفعلية.
+يمكن حذف `FIREBASE_PROJECT_ID` من المجموعة الثانية إذا كان `NEXT_PUBLIC_FIREBASE_PROJECT_ID` مضبوطاً. التطبيق يستخدم مشروع Firebase العام كمرجع أساسي لمنع القراءة من مشروع مختلف عن المشروع الذي تكتب إليه لوحة الإدارة.
+
+مهم: مفاتيح Firebase Admin سرية ولا يجب وضع قيمها داخل GitHub أو أي متغير يبدأ بـ `NEXT_PUBLIC_`.
 
 ## النشر على Vercel
 
