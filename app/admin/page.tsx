@@ -16,7 +16,7 @@ import {
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { auth, db, isFirebaseConfigured, storage } from "@/lib/firebase";
 import {
   asRequirements,
@@ -55,6 +55,8 @@ type TenderForm = {
   data_quality: string;
   notes: string;
 };
+
+type PublicApiStatus = "checking" | "ok" | "error";
 
 const emptyForm: TenderForm = {
   title_ar: "",
@@ -112,6 +114,45 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [listSearch, setListSearch] = useState("");
+  const [publicApiStatus, setPublicApiStatus] = useState<PublicApiStatus>("checking");
+  const [publicApiMessage, setPublicApiMessage] = useState("جار التحقق من اتصال واجهة العرض بالبيانات...");
+
+  const checkPublicApi = useCallback(async () => {
+    setPublicApiStatus("checking");
+    setPublicApiMessage("جار التحقق من اتصال واجهة العرض بالبيانات...");
+
+    try {
+      const response = await fetch("/api/tenders?locale=ar", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        setPublicApiStatus("error");
+        setPublicApiMessage(
+          "لوحة الإدارة متصلة، لكن واجهة العرض العامة لا تستطيع قراءة Firestore حالياً. راجع إعداد Firebase Admin على بيئة النشر.",
+        );
+        return;
+      }
+
+      const payload = await response.json() as { dataAvailable?: boolean };
+      if (payload.dataAvailable === false) {
+        setPublicApiStatus("error");
+        setPublicApiMessage(
+          "تم الوصول إلى واجهة التطبيق، لكن مصدر البيانات السيرفري غير جاهز. يجب استكمال إعداد Firebase Admin.",
+        );
+        return;
+      }
+
+      setPublicApiStatus("ok");
+      setPublicApiMessage("واجهة العرض متصلة بقاعدة المناقصات وتقرأ أحدث البيانات دون تخزين مؤقت.");
+    } catch {
+      setPublicApiStatus("error");
+      setPublicApiMessage("تعذر التحقق من واجهة العرض العامة. أعد الفحص بعد لحظات.");
+    }
+  }, []);
 
   useEffect(() => {
     const firebaseAuth = auth;
@@ -142,10 +183,42 @@ export default function AdminPage() {
     const firestore = db;
     if (!isAdmin || !firestore) return undefined;
     const q = query(collection(firestore, "tenders"), orderBy("created_at", "desc"));
-    return onSnapshot(q, (snapshot) => {
-      setTenders(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Tender));
-    });
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        setTenders(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Tender));
+      },
+      (snapshotError) => {
+        setError(snapshotError.message || "تعذر تحميل قائمة المناقصات من Firestore.");
+      },
+    );
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) void checkPublicApi();
+  }, [checkPublicApi, isAdmin]);
+
+  const visibleTenders = useMemo(() => {
+    const term = listSearch.trim().toLowerCase();
+    if (!term) return tenders;
+    return tenders.filter((tender) =>
+      [
+        tender.title_ar,
+        tender.title_en,
+        tender.organization_ar,
+        tender.organization_en,
+        tender.governorate,
+        tender.energy_type,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term),
+    );
+  }, [listSearch, tenders]);
+
+  const openCount = tenders.filter((tender) => (tender.status || "open") === "open").length;
+  const inactiveCount = tenders.length - openCount;
 
   async function login(event: FormEvent) {
     event.preventDefault();
@@ -154,6 +227,7 @@ export default function AdminPage() {
     if (!firebaseAuth) return;
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, password);
+      setPassword("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر تسجيل الدخول.");
     }
@@ -164,15 +238,19 @@ export default function AdminPage() {
     setForm((previous) => ({ ...previous, [name]: value }));
   }
 
-  function resetForm() {
+  function resetForm(clearFeedback = true) {
     setForm(emptyForm);
     setEditingId(null);
     setPdfFile(null);
-    setMessage("");
-    setError("");
+    if (clearFeedback) {
+      setMessage("");
+      setError("");
+    }
   }
 
   function editTender(tender: Tender) {
+    setMessage("");
+    setError("");
     setEditingId(tender.id || null);
     setForm({
       title_ar: tender.title_ar || "",
@@ -205,6 +283,12 @@ export default function AdminPage() {
 
   async function uploadPdf(tenderId: string) {
     if (!pdfFile || !storage) return form.pdf_url;
+    if (pdfFile.type && pdfFile.type !== "application/pdf") {
+      throw new Error("الملف المرفوع يجب أن يكون بصيغة PDF.");
+    }
+    if (pdfFile.size > 20 * 1024 * 1024) {
+      throw new Error("حجم ملف PDF يتجاوز 20 MB. استخدم ملفاً أصغر أو رابطاً خارجياً.");
+    }
     const storageRef = ref(storage, `tenders/${tenderId}/${Date.now()}-${pdfFile.name}`);
     const result = await uploadBytes(storageRef, pdfFile, { contentType: "application/pdf" });
     return getDownloadURL(result.ref);
@@ -212,6 +296,7 @@ export default function AdminPage() {
 
   async function saveTender(event: FormEvent) {
     event.preventDefault();
+    if (saving) return;
     setSaving(true);
     setMessage("");
     setError("");
@@ -224,13 +309,13 @@ export default function AdminPage() {
     }
 
     try {
+      const wasEditing = Boolean(editingId);
       if (editingId) {
         const pdfUrl = await uploadPdf(editingId);
         await updateDoc(doc(firestore, "tenders", editingId), {
           ...formToPayload({ ...form, pdf_url: pdfUrl || form.pdf_url }),
           updated_at: serverTimestamp(),
         });
-        setMessage("تم تحديث المناقصة بنجاح.");
       } else {
         const newDoc = await addDoc(collection(firestore, "tenders"), {
           ...formToPayload(form),
@@ -241,9 +326,11 @@ export default function AdminPage() {
         if (pdfUrl) {
           await updateDoc(doc(firestore, "tenders", newDoc.id), { pdf_url: pdfUrl, updated_at: serverTimestamp() });
         }
-        setMessage("تمت إضافة المناقصة بنجاح.");
       }
-      resetForm();
+
+      resetForm(false);
+      setMessage(wasEditing ? "تم تحديث المناقصة بنجاح." : "تمت إضافة المناقصة بنجاح.");
+      void checkPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر حفظ المناقصة.");
     } finally {
@@ -256,13 +343,31 @@ export default function AdminPage() {
     if (!id || !firestore) return;
     const confirmed = window.confirm("هل تريد حذف هذه المناقصة نهائياً؟");
     if (!confirmed) return;
-    await deleteDoc(doc(firestore, "tenders", id));
+
+    setMessage("");
+    setError("");
+    try {
+      await deleteDoc(doc(firestore, "tenders", id));
+      setMessage("تم حذف المناقصة.");
+      void checkPublicApi();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر حذف المناقصة.");
+    }
   }
 
   async function updateStatus(id: string | undefined, status: TenderStatus) {
     const firestore = db;
     if (!id || !firestore) return;
-    await updateDoc(doc(firestore, "tenders", id), { status, updated_at: serverTimestamp() });
+
+    setMessage("");
+    setError("");
+    try {
+      await updateDoc(doc(firestore, "tenders", id), { status, updated_at: serverTimestamp() });
+      setMessage("تم تحديث حالة المناقصة.");
+      void checkPublicApi();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر تحديث حالة المناقصة.");
+    }
   }
 
   if (authLoading) {
@@ -282,13 +387,25 @@ export default function AdminPage() {
           <form onSubmit={login} className="sr-form sr-form--narrow">
             <label>
               البريد الإلكتروني
-              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="username"
+                required
+              />
             </label>
             <label>
               كلمة المرور
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
             </label>
-            {error ? <p className="sr-state sr-state--error">{error}</p> : null}
+            {error ? <p className="sr-state sr-state--error" role="alert">{error}</p> : null}
             <button className="sr-button sr-button--primary" type="submit">
               دخول
             </button>
@@ -321,7 +438,7 @@ export default function AdminPage() {
         </div>
         <div className="sr-actions">
           <Link className="sr-button sr-button--ghost" href="/">
-            الصفحة العامة
+            عرض التطبيق
           </Link>
           <button className="sr-button sr-button--ghost" type="button" onClick={() => auth && signOut(auth)}>
             خروج
@@ -329,11 +446,32 @@ export default function AdminPage() {
         </div>
       </header>
 
+      <section
+        className={`sr-admin-health sr-admin-health--${publicApiStatus}`}
+        role="status"
+        aria-live="polite"
+      >
+        <span className="sr-admin-health__dot" aria-hidden="true" />
+        <div className="sr-admin-health__copy">
+          <strong>حالة نشر البيانات</strong>
+          <p>{publicApiMessage}</p>
+        </div>
+        <button className="sr-button sr-button--ghost" type="button" onClick={() => void checkPublicApi()}>
+          إعادة الفحص
+        </button>
+      </section>
+
+      <section className="sr-admin-stats" aria-label="إحصاءات المناقصات">
+        <div className="sr-admin-stat"><strong>{tenders.length}</strong><span>إجمالي السجلات</span></div>
+        <div className="sr-admin-stat"><strong>{openCount}</strong><span>مناقصة مفتوحة</span></div>
+        <div className="sr-admin-stat"><strong>{inactiveCount}</strong><span>غير مفتوحة</span></div>
+      </section>
+
       <form className="sr-form" onSubmit={saveTender}>
         <div className="sr-form-title">
           <h2>{editingId ? "تعديل مناقصة" : "إضافة مناقصة"}</h2>
           {editingId ? (
-            <button className="sr-button sr-button--ghost" type="button" onClick={resetForm}>
+            <button className="sr-button sr-button--ghost" type="button" onClick={() => resetForm()}>
               إلغاء التعديل
             </button>
           ) : null}
@@ -347,7 +485,7 @@ export default function AdminPage() {
           </label>
           <label>
             Tender title in English
-            <input name="title_en" value={form.title_en} onChange={handleChange} />
+            <input name="title_en" value={form.title_en} onChange={handleChange} dir="ltr" />
           </label>
           <label>
             الجهة المعلنة بالعربية *
@@ -355,7 +493,7 @@ export default function AdminPage() {
           </label>
           <label>
             Organization in English
-            <input name="organization_en" value={form.organization_en} onChange={handleChange} />
+            <input name="organization_en" value={form.organization_en} onChange={handleChange} dir="ltr" />
           </label>
           <label>
             نوع الطاقة
@@ -433,7 +571,7 @@ export default function AdminPage() {
           </label>
           <label>
             English summary
-            <textarea name="summary_en" value={form.summary_en} onChange={handleChange} rows={3} />
+            <textarea name="summary_en" value={form.summary_en} onChange={handleChange} rows={3} dir="ltr" />
           </label>
           <label className="sr-field-wide">
             الوصف الكامل عربي
@@ -441,7 +579,7 @@ export default function AdminPage() {
           </label>
           <label className="sr-field-wide">
             Full English description
-            <textarea name="description_en" value={form.description_en} onChange={handleChange} rows={6} />
+            <textarea name="description_en" value={form.description_en} onChange={handleChange} rows={6} dir="ltr" />
           </label>
           <label className="sr-field-wide">
             المتطلبات — اكتب كل متطلب في سطر مستقل
@@ -453,15 +591,15 @@ export default function AdminPage() {
           <legend>مرفقات ومصدر وملاحظات</legend>
           <label>
             رابط المصدر
-            <input type="url" name="source_url" value={form.source_url} onChange={handleChange} />
+            <input type="url" name="source_url" value={form.source_url} onChange={handleChange} dir="ltr" />
           </label>
           <label>
             رابط PDF خارجي
-            <input type="url" name="pdf_url" value={form.pdf_url} onChange={handleChange} />
+            <input type="url" name="pdf_url" value={form.pdf_url} onChange={handleChange} dir="ltr" />
           </label>
           <label>
-            رفع PDF
-            <input type="file" accept="application/pdf" onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
+            رفع PDF — حد أقصى 20 MB
+            <input type="file" accept="application/pdf,.pdf" onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
           </label>
           <label>
             جودة البيانات
@@ -475,8 +613,10 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        {message ? <p className="sr-state sr-state--success">{message}</p> : null}
-        {error ? <p className="sr-state sr-state--error">{error}</p> : null}
+        <div aria-live="polite">
+          {message ? <p className="sr-state sr-state--success">{message}</p> : null}
+          {error ? <p className="sr-state sr-state--error" role="alert">{error}</p> : null}
+        </div>
 
         <button className="sr-button sr-button--primary" type="submit" disabled={saving}>
           {saving ? "جار الحفظ..." : editingId ? "حفظ التعديل" : "إضافة المناقصة"}
@@ -484,15 +624,34 @@ export default function AdminPage() {
       </form>
 
       <section className="sr-admin-list">
-        <h2>المناقصات المنشورة</h2>
-        {tenders.map((tender) => (
+        <div className="sr-admin-list__toolbar">
+          <h2>المناقصات المنشورة</h2>
+          <input
+            className="sr-admin-list__search"
+            type="search"
+            value={listSearch}
+            onChange={(event) => setListSearch(event.target.value)}
+            placeholder="بحث بالعنوان أو الجهة أو المحافظة..."
+            aria-label="بحث في المناقصات المنشورة"
+          />
+        </div>
+
+        {visibleTenders.length === 0 ? (
+          <p className="sr-state">لا توجد سجلات مطابقة للبحث.</p>
+        ) : null}
+
+        {visibleTenders.map((tender) => (
           <article className="sr-admin-row" key={tender.id}>
             <div>
               <h3>{tender.title_ar || tender.title_en}</h3>
               <p>{tender.organization_ar || tender.organization_en}</p>
             </div>
             <div className="sr-admin-row__actions">
-              <select value={tender.status || "open"} onChange={(event) => updateStatus(tender.id, event.target.value as TenderStatus)}>
+              <select
+                aria-label={`حالة ${tender.title_ar || tender.title_en || "المناقصة"}`}
+                value={tender.status || "open"}
+                onChange={(event) => void updateStatus(tender.id, event.target.value as TenderStatus)}
+              >
                 <option value="open">مفتوحة</option>
                 <option value="closed">مغلقة</option>
                 <option value="awarded">مُرساة</option>
@@ -504,7 +663,7 @@ export default function AdminPage() {
               <button className="sr-button sr-button--ghost" type="button" onClick={() => editTender(tender)}>
                 تعديل
               </button>
-              <button className="sr-button sr-button--danger" type="button" onClick={() => removeTender(tender.id)}>
+              <button className="sr-button sr-button--danger" type="button" onClick={() => void removeTender(tender.id)}>
                 حذف
               </button>
             </div>
