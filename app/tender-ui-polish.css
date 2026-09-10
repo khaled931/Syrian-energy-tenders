@@ -1,0 +1,543 @@
+/* Public tender UI polish: dark-mode contrast and compact mobile ergonomics. */
+
+/* High-contrast dark palette. Keep the brand teal, but use brighter text tones
+   and darker solid surfaces so translucent layers never wash out readability. */
+html[data-theme="dark"] {
+  --sr-text: #f2f8f9;
+  --sr-ink: #f2f8f9;
+  --sr-muted: #b8c9cc;
+  --sr-surface: #071416;
+  --sr-surface-soft: #0d2226;
+  --sr-surface-raised: #10272c;
+  --sr-card: rgba(12, 31, 35, 0.96);
+  --sr-card-strong: #10272c;
+  --sr-border: #31545b;
+  --sr-soft: rgba(91, 198, 216, 0.14);
+}
+
+html[data-theme="dark"] body {
+  background: #071416;
+}
+
+html[data-theme="dark"] .sr-platform-header {
+  background: rgba(7, 20, 22, 0.94);
+  border-bottom-color: #29484f;
+}
+
+html[data-theme="dark"] .sr-platform-nav-link {
+  color: #c0d0d3;
+}
+
+html[data-theme="dark"] .sr-platform-nav-link:hover,
+html[data-theme="dark"] .sr-platform-nav-link:focus-visible,
+html[data-theme="dark"] .sr-platform-nav-link.is-active {
+  color: #8ddbe6;
+  background: #122b30;
+}
+
+html[data-theme="dark"] .sr-platform-icon-button,
+html[data-theme="dark"] .sr-platform-menu-button,
+html[data-theme="dark"] .sr-platform-language {
+  color: #edf7f8;
+  background: #10272c;
+  border-color: #34565e;
+}
+
+html[data-theme="dark"] .sr-platform-language {
+  color: #8ddbe6;
+}
+
+html[data-theme="dark"] .sr-hero,
+html[data-theme="dark"] .sr-card,
+html[data-theme="dark"] .sr-detail-card,
+html[data-theme="dark"] .sr-state {
+  color: #f2f8f9;
+  background: #10272c;
+  border-color: #31545b;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+/* Remove the light glass sheen that caused the washed-out grey patches in dark mode. */
+html[data-theme="dark"] .sr-hero::before,
+html[data-theme="dark"] .sr-detail-card::before {
+  background: linear-gradient(135deg, rgba(92, 201, 217, 0.07), transparent 42%);
+}
+
+html[data-theme="dark"] .sr-topbar h1,
+html[data-theme="dark"] .sr-detail-card h1,
+html[data-theme="dark"] .sr-card h2,
+html[data-theme="dark"] .sr-detail-section h2,
+html[data-theme="dark"] .sr-eyebrow,
+html[data-theme="dark"] .sr-readmore {
+  color: #8ddbe6;
+}
+
+html[data-theme="dark"] .sr-hero__content p,
+html[data-theme="dark"] .sr-card__org,
+html[data-theme="dark"] .sr-card__summary,
+html[data-theme="dark"] .sr-card__footer,
+html[data-theme="dark"] .sr-detail-org,
+html[data-theme="dark"] .sr-share-message,
+html[data-theme="dark"] .sr-notes {
+  color: #c8d7da;
+}
+
+html[data-theme="dark"] .sr-searchbar input,
+html[data-theme="dark"] .sr-filter-drawer select,
+html[data-theme="dark"] .sr-filter-drawer input,
+html[data-theme="dark"] .sr-filter-drawer textarea {
+  color: #f5fafb;
+  background: #0a1d21;
+  border-color: #3b6068;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .sr-searchbar input::placeholder,
+html[data-theme="dark"] .sr-filter-drawer input::placeholder,
+html[data-theme="dark"] .sr-filter-drawer textarea::placeholder {
+  color: #91a8ad;
+  opacity: 1;
+}
+
+html[data-theme="dark"] .sr-searchbar input:focus,
+html[data-theme="dark"] .sr-filter-drawer select:focus,
+html[data-theme="dark"] .sr-filter-drawer input:focus,
+html[data-theme="dark"] .sr-filter-drawer textarea:focus {
+  color: #ffffff;
+  background: #0d252a;
+  border-color: #63c9d8;
+  box-shadow: 0 0 0 3px rgba(99, 201, 216, 0.16);
+}
+
+html[data-theme="dark"] .sr-mini-button,
+html[data-theme="dark"] .sr-button--ghost {
+  color: #91dbe5;
+  background: #122b30;
+  border-color: #3b6169;
+}
+
+html[data-theme="dark"] .sr-button--primary,
+html[data-theme="dark"] .sr-mini-button--primary,
+html[data-theme="dark"] .sr-view-tab--active {
+  color: #ffffff;
+  background: #247f90;
+  border-color: #3aa5b8;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .sr-view-tabs {
+  background: #0a1d21;
+  border-color: #31545b;
+}
+
+html[data-theme="dark"] .sr-view-tab {
+  color: #9adce5;
+}
+
+html[data-theme="dark"] .sr-view-tab--active {
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .sr-meta-grid span,
+html[data-theme="dark"] .sr-info {
+  color: #eff6f7;
+  background: #0a1d21;
+  border-color: #294a51;
+}
+
+html[data-theme="dark"] .sr-meta-grid strong,
+html[data-theme="dark"] .sr-info strong {
+  color: #a9bdc1;
+}
+
+html[data-theme="dark"] .sr-type {
+  color: #9ee4ec;
+  background: rgba(56, 162, 180, 0.18);
+  border: 1px solid rgba(111, 211, 225, 0.22);
+}
+
+html[data-theme="dark"] .sr-status--open {
+  color: #b7f7d3;
+  background: #123d2c;
+  border: 1px solid #28684c;
+}
+
+html[data-theme="dark"] .sr-status--closed {
+  color: #d6e1e3;
+  background: #28383c;
+  border: 1px solid #485e63;
+}
+
+html[data-theme="dark"] .sr-status--awarded {
+  color: #ffe0a3;
+  background: #4b3513;
+  border: 1px solid #725322;
+}
+
+html[data-theme="dark"] .sr-status--cancelled {
+  color: #ffc8c4;
+  background: #4a2220;
+  border: 1px solid #74403b;
+}
+
+/* Membership notice: remove the light gradient that became a large grey panel
+   in dark mode and keep both calls-to-action clearly distinguishable. */
+html[data-theme="dark"] .sr-membership-notice,
+html[data-theme="dark"] .sr-membership-gate {
+  color: #edf6f7;
+  background: linear-gradient(135deg, #112d33, #0b2025);
+  border-color: #38616a;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
+html[data-theme="dark"] .sr-membership-notice strong,
+html[data-theme="dark"] .sr-membership-gate h1 {
+  color: #91dbe5;
+}
+
+html[data-theme="dark"] .sr-membership-notice p,
+html[data-theme="dark"] .sr-membership-gate p {
+  color: #e1ecee;
+}
+
+html[data-theme="dark"] .sr-membership-primary {
+  color: #ffffff;
+  background: #247f90;
+  border: 1px solid #3ca2b5;
+}
+
+html[data-theme="dark"] .sr-membership-secondary {
+  color: #a6e6ee;
+  background: #10262b;
+  border-color: #527881;
+}
+
+html[data-theme="dark"] .sr-filter-drawer {
+  background: #0b1f24;
+  border-color: #31545b;
+  box-shadow: -18px 0 56px rgba(0, 0, 0, 0.38);
+}
+
+html[data-theme="dark"] .sr-filter-drawer h2,
+html[data-theme="dark"] .sr-filters label {
+  color: #dbe8ea;
+}
+
+/* Closing-soon styling uses html[data-theme] because the theme is stored on <html>,
+   not a .sr-theme-dark wrapper. */
+html[data-theme="dark"] .sr-card--closing-soon {
+  background: linear-gradient(135deg, #2f1719, #10272c);
+  border-color: #744045;
+}
+
+html[data-theme="dark"] .sr-deadline-badge,
+html[data-theme="dark"] .sr-deadline-date--soon,
+html[data-theme="dark"] .sr-map-list-card--closing-soon {
+  color: #ffd2cf;
+  background: #482326 !important;
+  border-color: #7b4448 !important;
+}
+
+html[data-theme="dark"] .sr-deadline-date--soon strong,
+html[data-theme="dark"] .sr-deadline-text,
+html[data-theme="dark"] .sr-map-list-card--closing-soon strong {
+  color: #ffd2cf !important;
+}
+
+html[data-theme="dark"] .sr-map-panel,
+html[data-theme="dark"] .sr-map-list,
+html[data-theme="dark"] .leaflet-popup-content-wrapper,
+html[data-theme="dark"] .leaflet-popup-tip {
+  background: #10272c;
+  border-color: #31545b;
+  color: #f2f8f9;
+}
+
+html[data-theme="dark"] .sr-map-list-card:hover,
+html[data-theme="dark"] .sr-map-list-card:focus-visible {
+  background: #17343a;
+}
+
+html[data-theme="dark"] .sr-map-list-card strong,
+html[data-theme="dark"] .sr-map-card h3 {
+  color: #8ddbe6;
+}
+
+html[data-theme="dark"] .sr-map-list-card small,
+html[data-theme="dark"] .sr-map-card p,
+html[data-theme="dark"] .sr-map-card__meta {
+  color: #c1d1d4;
+}
+
+/* Mobile: reduce visual bulk while preserving 44px-ish touch targets for primary actions. */
+@media (max-width: 720px) {
+  .sr-home-shell {
+    width: min(100% - 12px, 1180px);
+    padding-top: 16px;
+  }
+
+  .sr-hero--compact {
+    padding: 10px;
+    border-radius: 17px;
+  }
+
+  .sr-mobile-topbar {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sr-title-block .sr-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.035em;
+  }
+
+  .sr-topbar h1 {
+    font-size: 1.13rem;
+    line-height: 1.35;
+  }
+
+  .sr-mobile-actions {
+    flex: 0 0 auto;
+  }
+
+  .sr-mobile-actions .sr-mini-button {
+    min-height: 30px;
+    padding: 4px 9px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  .sr-view-tabs {
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px;
+    border-radius: 13px;
+  }
+
+  .sr-view-tab {
+    min-height: 32px;
+    padding: 5px 7px;
+    border-radius: 9px;
+    font-size: 0.69rem;
+    line-height: 1.25;
+  }
+
+  .sr-hero__content--compact {
+    margin-top: 8px;
+  }
+
+  .sr-searchbar input {
+    min-height: 38px;
+    padding: 7px 10px;
+    border-radius: 11px;
+    font-size: 0.82rem;
+  }
+
+  .sr-membership-notice {
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 11px 12px;
+    border-radius: 14px;
+  }
+
+  .sr-membership-notice strong {
+    font-size: 0.88rem;
+  }
+
+  .sr-membership-notice p {
+    margin-top: 3px;
+    font-size: 0.79rem;
+    line-height: 1.55;
+  }
+
+  .sr-membership-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .sr-membership-actions a {
+    min-height: 38px;
+    padding: 7px 8px;
+    border-radius: 11px;
+    font-size: 0.77rem;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .sr-section-head--compact {
+    margin: 12px 2px 8px;
+  }
+
+  .sr-section-head--compact .sr-eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .sr-section-head h2 {
+    font-size: 0.93rem;
+  }
+
+  .sr-card-grid--compact {
+    gap: 8px;
+  }
+
+  .sr-card--compact {
+    gap: 7px;
+    padding: 10px;
+    border-radius: 15px;
+  }
+
+  .sr-card__topline {
+    gap: 6px;
+  }
+
+  .sr-card h2 {
+    font-size: 0.91rem;
+    line-height: 1.42;
+  }
+
+  .sr-card__org {
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .sr-status,
+  .sr-type {
+    min-height: 22px;
+    padding: 2px 7px;
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+
+  .sr-meta-grid--compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .sr-meta-grid--compact span {
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 10px;
+    font-size: 0.71rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .sr-meta-grid--compact strong {
+    font-size: 0.59rem;
+    line-height: 1.25;
+  }
+
+  .sr-card__footer {
+    gap: 6px;
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .sr-card__footer > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sr-readmore {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .sr-filter-drawer {
+    width: min(310px, 90vw);
+    padding: 12px;
+  }
+
+  .sr-filter-drawer__head h2 {
+    font-size: 1rem;
+  }
+
+  .sr-filters--drawer {
+    gap: 9px;
+    margin: 12px 0;
+  }
+
+  .sr-filters--drawer label {
+    gap: 4px;
+    font-size: 0.78rem;
+  }
+
+  .sr-filters--drawer select {
+    min-height: 40px;
+    padding: 7px 9px;
+    border-radius: 11px;
+    font-size: 0.8rem;
+  }
+
+  .sr-filter-drawer__actions {
+    gap: 7px;
+  }
+
+  .sr-filter-drawer__actions .sr-button {
+    min-height: 38px;
+    padding: 7px 9px;
+    font-size: 0.78rem;
+  }
+
+  .sr-detail-page {
+    width: min(100% - 12px, 960px);
+  }
+
+  .sr-detail-card {
+    padding: 14px;
+    border-radius: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+  .sr-home-shell {
+    width: min(100% - 8px, 1180px);
+  }
+
+  .sr-topbar h1 {
+    font-size: 1.04rem;
+  }
+
+  .sr-mobile-actions .sr-mini-button {
+    min-height: 28px;
+    padding-inline: 8px;
+    font-size: 0.66rem;
+  }
+
+  .sr-membership-notice {
+    padding: 10px;
+  }
+
+  .sr-membership-actions a {
+    padding-inline: 6px;
+    font-size: 0.72rem;
+  }
+
+  .sr-card--compact {
+    padding: 9px;
+  }
+
+  .sr-meta-grid--compact {
+    gap: 4px;
+  }
+
+  .sr-meta-grid--compact span {
+    padding: 6px 5px;
+    font-size: 0.67rem;
+  }
+
+  .sr-card__footer {
+    font-size: 0.66rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .sr-card:hover,
+  .sr-button:hover,
+  .sr-mini-button:hover {
+    transform: none;
+  }
+}
