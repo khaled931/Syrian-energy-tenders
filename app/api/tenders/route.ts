@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         error: "firebase_admin_not_configured",
         access: accessPayload,
       },
-      { status: 503, headers },
+      { headers },
     );
   }
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         error: "firebase_admin_read_failed",
         access: accessPayload,
       },
-      { status: 503, headers },
+      { headers },
     );
   }
 }
