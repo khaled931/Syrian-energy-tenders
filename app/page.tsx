@@ -30,6 +30,8 @@ type AccessState = {
 
 type TendersPayload = {
   tenders?: Tender[];
+  dataAvailable?: boolean;
+  error?: string;
   access?: Partial<AccessState>;
 };
 
@@ -60,6 +62,7 @@ const copy = {
     published: "فرصة منشورة",
     loading: "جار تحميل المناقصات...",
     loadError: "تعذر تحميل المناقصات حالياً. حاول مرة أخرى لاحقاً.",
+    backendUnavailable: "بيانات المناقصات محفوظة، لكن واجهة العرض لا تستطيع الاتصال بقاعدة البيانات حالياً. يرجى المحاولة لاحقاً.",
     empty: "لا توجد مناقصات مطابقة حالياً.",
     listLabel: "قائمة المناقصات",
   },
@@ -89,6 +92,7 @@ const copy = {
     published: "published opportunities",
     loading: "Loading tenders...",
     loadError: "Unable to load tenders right now. Please try again later.",
+    backendUnavailable: "Tender records are stored, but the public data service cannot reach the database right now. Please try again later.",
     empty: "No matching tenders are currently available.",
     listLabel: "Tender list",
   },
@@ -139,6 +143,7 @@ export default function HomePage() {
         if (!response.ok) throw new Error(`Tender API ${response.status}`);
         const payload = await response.json() as TendersPayload;
         if (!active) return;
+
         setTenders(Array.isArray(payload.tenders) ? payload.tenders : []);
         const fallback = fallbackAccess(locale);
         const incoming = payload.access || {};
@@ -151,6 +156,10 @@ export default function HomePage() {
           registerUrl: typeof incoming.registerUrl === "string" ? incoming.registerUrl : fallback.registerUrl,
           reason: typeof incoming.reason === "string" ? incoming.reason : fallback.reason,
         });
+
+        if (payload.dataAvailable === false) {
+          setError(text.backendUnavailable);
+        }
       } catch {
         if (!active) return;
         setTenders([]);
@@ -162,7 +171,7 @@ export default function HomePage() {
     }
     void load();
     return () => { active = false; };
-  }, [locale, text.loadError]);
+  }, [locale, text.backendUnavailable, text.loadError]);
 
   useEffect(() => {
     if (!showFilters) return;
@@ -315,7 +324,7 @@ export default function HomePage() {
       </section>
 
       {loading ? <p className="sr-state">{text.loading}</p> : null}
-      {error ? <p className="sr-state sr-state--error">{error}</p> : null}
+      {error ? <p className="sr-state sr-state--error" role="alert">{error}</p> : null}
       {!loading && !error && filteredTenders.length === 0 ? <p className="sr-state">{text.empty}</p> : null}
 
       {!loading && !error && viewMode === "map" ? <TenderMap tenders={filteredTenders} locale={locale} /> : null}
