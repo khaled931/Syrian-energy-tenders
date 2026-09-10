@@ -6,6 +6,7 @@ import "./platform-shell.css";
 import "./mobile-map.css";
 import "./deadline-warning.css";
 import "./membership.css";
+import "./admin-panel.css";
 
 const bootstrapScript = `(() => {
   try {
