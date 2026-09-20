@@ -189,6 +189,24 @@ function stableTenderId(telegramMessageId: string) {
   return normalized ? `telegram-${normalized}` : "";
 }
 
+export async function GET() {
+  const headers = {
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+  };
+
+  return NextResponse.json(
+    {
+      ok: true,
+      service: "notion-tender-import",
+      version: "2026-09-20.1",
+      webhookSecretConfigured: Boolean(process.env.NOTION_TENDER_WEBHOOK_SECRET?.trim()),
+      firebaseAdminConfigured: isFirebaseAdminConfigured(),
+    },
+    { headers },
+  );
+}
+
 export async function POST(request: NextRequest) {
   const headers = {
     "Cache-Control": "private, no-store",
