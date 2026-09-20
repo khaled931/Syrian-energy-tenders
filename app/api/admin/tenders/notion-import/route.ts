@@ -189,19 +189,53 @@ function stableTenderId(telegramMessageId: string) {
   return normalized ? `telegram-${normalized}` : "";
 }
 
+const DEBUG_DOC_PATH = ["_system", "notion_tender_webhook_debug"] as const;
+
+async function writeWebhookDebug(data: Record<string, unknown>) {
+  if (!isFirebaseAdminConfigured()) return;
+  try {
+    const db = getAdminDb();
+    await db.collection(DEBUG_DOC_PATH[0]).doc(DEBUG_DOC_PATH[1]).set(
+      {
+        ...data,
+        receivedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error(
+      "[notion-tender-import] Failed to write webhook diagnostics",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
 export async function GET() {
   const headers = {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
   };
 
+  let lastWebhookDebug: Record<string, unknown> | null = null;
+
+  if (isFirebaseAdminConfigured()) {
+    try {
+      const db = getAdminDb();
+      const snapshot = await db.collection(DEBUG_DOC_PATH[0]).doc(DEBUG_DOC_PATH[1]).get();
+      lastWebhookDebug = snapshot.exists ? (snapshot.data() as Record<string, unknown>) : null;
+    } catch {
+      lastWebhookDebug = { result: "debug_read_failed" };
+    }
+  }
+
   return NextResponse.json(
     {
       ok: true,
       service: "notion-tender-import",
-      version: "2026-09-20.1",
+      version: "2026-09-20.2",
       webhookSecretConfigured: Boolean(process.env.NOTION_TENDER_WEBHOOK_SECRET?.trim()),
       firebaseAdminConfigured: isFirebaseAdminConfigured(),
+      lastWebhookDebug,
     },
     { headers },
   );
@@ -221,7 +255,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!secretMatches(request, expectedSecret)) {
+  const authHeaderPresent = Boolean(
+    request.headers.get("x-syrian-renewables-sync-secret")?.trim(),
+  );
+  const authMatched = secretMatches(request, expectedSecret);
+
+  if (!authMatched) {
+    await writeWebhookDebug({
+      result: "unauthorized",
+      authHeaderPresent,
+      authMatched: false,
+    });
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401, headers });
   }
 
@@ -238,11 +282,24 @@ export async function POST(request: NextRequest) {
     if (!isRecord(parsed)) throw new Error("invalid_json_object");
     body = parsed;
   } catch {
+    await writeWebhookDebug({
+      result: "invalid_json",
+      authHeaderPresent,
+      authMatched: true,
+    });
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400, headers });
   }
 
+  const topLevelKeys = Object.keys(body).slice(0, 50);
   const reviewStatus = readField(body, ["حالة المراجعة", "review_status", "reviewStatus"]);
   if (reviewStatus !== "معتمد" && reviewStatus.toLowerCase() !== "approved") {
+    await writeWebhookDebug({
+      result: "tender_not_approved",
+      authHeaderPresent,
+      authMatched: true,
+      topLevelKeys,
+      reviewStatus: reviewStatus || null,
+    });
     return NextResponse.json(
       { ok: false, error: "tender_not_approved", reviewStatus: reviewStatus || null },
       { status: 422, headers },
@@ -264,6 +321,19 @@ export async function POST(request: NextRequest) {
   ].filter(Boolean);
 
   if (missing.length) {
+    await writeWebhookDebug({
+      result: "missing_required_fields",
+      authHeaderPresent,
+      authMatched: true,
+      topLevelKeys,
+      reviewStatus,
+      extracted: {
+        telegramMessageIdPresent: Boolean(telegramMessageId),
+        titlePresent: Boolean(titleAr),
+        organizationPresent: Boolean(organizationAr),
+      },
+      missing,
+    });
     return NextResponse.json(
       { ok: false, error: "missing_required_fields", missing },
       { status: 422, headers },
@@ -362,6 +432,21 @@ export async function POST(request: NextRequest) {
 
     await ref.set(payload, { merge: true });
 
+    await writeWebhookDebug({
+      result: "success",
+      authHeaderPresent,
+      authMatched: true,
+      topLevelKeys,
+      reviewStatus,
+      tenderId,
+      operation: existing.exists ? "updated" : "created",
+      extracted: {
+        telegramMessageIdPresent: true,
+        titlePresent: true,
+        organizationPresent: true,
+      },
+    });
+
     return NextResponse.json(
       {
         ok: true,
@@ -377,6 +462,14 @@ export async function POST(request: NextRequest) {
       "[notion-tender-import] Failed to upsert tender",
       error instanceof Error ? error.message : error,
     );
+    await writeWebhookDebug({
+      result: "firestore_write_failed",
+      authHeaderPresent,
+      authMatched: true,
+      topLevelKeys,
+      reviewStatus,
+      tenderId,
+    });
     return NextResponse.json(
       { ok: false, error: "firestore_write_failed" },
       { status: 500, headers },
