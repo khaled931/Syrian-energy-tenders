@@ -79,7 +79,7 @@ function unwrapNotionValue(value: unknown): string {
 }
 
 function findByAliases(value: unknown, aliases: string[], depth = 0): unknown {
-  if (depth > 6 || value === null || value === undefined) return undefined;
+  if (depth > 8 || value === null || value === undefined) return undefined;
   const aliasSet = new Set(aliases.map(normalizeKey));
 
   if (Array.isArray(value)) {
@@ -92,8 +92,39 @@ function findByAliases(value: unknown, aliases: string[], depth = 0): unknown {
 
   if (!isRecord(value)) return undefined;
 
+  // Standard object shape: { "الجهة المعلنة": ... }
   for (const [key, nestedValue] of Object.entries(value)) {
     if (aliasSet.has(normalizeKey(key))) return nestedValue;
+  }
+
+  // Notion webhook payloads can also encode a property as a descriptor,
+  // e.g. { name: "الجهة المعلنة", value: "..." } or
+  // { property: "الجهة المعلنة", rich_text: [...] }.
+  const descriptorKeys = ["name", "property", "property_name", "propertyName", "label", "key"];
+  const payloadKeys = [
+    "value",
+    "text",
+    "rich_text",
+    "title",
+    "select",
+    "date",
+    "url",
+    "content",
+    "plain_text",
+    "number",
+    "property_value",
+    "propertyValue",
+  ];
+
+  for (const descriptorKey of descriptorKeys) {
+    const descriptor = value[descriptorKey];
+    if (typeof descriptor !== "string" || !aliasSet.has(normalizeKey(descriptor))) continue;
+
+    for (const payloadKey of payloadKeys) {
+      if (payloadKey === descriptorKey || !(payloadKey in value)) continue;
+      const candidate = value[payloadKey];
+      if (candidate !== undefined && candidate !== null) return candidate;
+    }
   }
 
   for (const nestedValue of Object.values(value)) {
@@ -232,7 +263,7 @@ export async function GET() {
     {
       ok: true,
       service: "notion-tender-import",
-      version: "2026-09-20.2",
+      version: "2026-09-26.1",
       webhookSecretConfigured: Boolean(process.env.NOTION_TENDER_WEBHOOK_SECRET?.trim()),
       firebaseAdminConfigured: isFirebaseAdminConfigured(),
       lastWebhookDebug,
