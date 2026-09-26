@@ -47,7 +47,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: bootstrapScript }} /></head>
-      <body><PlatformShell>{children}</PlatformShell></body>
+      <body><PlatformShell>{children}</PlatformShell>
+        <script src="https://syrianrenewables.com/english-contact-popup.js" defer />
+</body>
     </html>
   );
 }
