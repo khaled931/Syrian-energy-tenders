@@ -195,6 +195,22 @@ function splitRequirements(value: string) {
     .filter(Boolean);
 }
 
+function inferOrganization(title: string, description: string) {
+  const candidates = [description, title].filter(Boolean);
+
+  for (const text of candidates) {
+    const announcedBy = text.match(/(?:^|[.!؟]\s*)تعلن\s+([^،,.؛:]{3,120}?)\s+(?:عن|استدراج|طلب|مناقصة|مزاد)/);
+    if (announcedBy?.[1]) return announcedBy[1].trim();
+
+    const dashSuffix = text.match(/[–—-]\s*([^–—-]{3,100})$/);
+    if (dashSuffix?.[1] && /(شركة|مؤسسة|وزارة|محافظة|مديرية|إدارة|جامعة|منظمة|مجلس|هيئة)/.test(dashSuffix[1])) {
+      return dashSuffix[1].trim();
+    }
+  }
+
+  return "";
+}
+
 function cleanObject(input: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(input).filter(([, value]) => {
@@ -263,7 +279,7 @@ export async function GET() {
     {
       ok: true,
       service: "notion-tender-import",
-      version: "2026-09-26.1",
+      version: "2026-09-26.2",
       webhookSecretConfigured: Boolean(process.env.NOTION_TENDER_WEBHOOK_SECRET?.trim()),
       firebaseAdminConfigured: isFirebaseAdminConfigured(),
       lastWebhookDebug,
@@ -343,12 +359,11 @@ export async function POST(request: NextRequest) {
     "telegramMessageId",
   ]);
   const titleAr = readField(body, ["عنوان المناقصة", "title_ar", "title"]);
-  const organizationAr = readField(body, ["الجهة المعلنة", "organization_ar", "organization"]);
+  const organizationFromWebhook = readField(body, ["الجهة المعلنة", "organization_ar", "organization"]);
 
   const missing = [
     !telegramMessageId ? "Telegram Message ID" : "",
     !titleAr ? "عنوان المناقصة" : "",
-    !organizationAr ? "الجهة المعلنة" : "",
   ].filter(Boolean);
 
   if (missing.length) {
@@ -361,7 +376,7 @@ export async function POST(request: NextRequest) {
       extracted: {
         telegramMessageIdPresent: Boolean(telegramMessageId),
         titlePresent: Boolean(titleAr),
-        organizationPresent: Boolean(organizationAr),
+        organizationPresent: Boolean(organizationFromWebhook),
       },
       missing,
     });
@@ -384,6 +399,13 @@ export async function POST(request: NextRequest) {
   const governorateRaw = readField(body, ["المحافظة", "governorate"]);
   const governorate = GOVERNORATES.has(governorateRaw) ? governorateRaw : "غير محدد";
   const descriptionAr = readField(body, ["وصف المناقصة", "description_ar", "description"]);
+  const inferredOrganization = inferOrganization(titleAr, descriptionAr);
+  const organizationAr = organizationFromWebhook || inferredOrganization || "جهة غير محددة";
+  const organizationSource = organizationFromWebhook
+    ? "webhook"
+    : inferredOrganization
+      ? "inferred_from_text"
+      : "fallback_unspecified";
   const summaryAr =
     readField(body, ["ملخص المناقصة", "summary_ar", "summary"]) ||
     (descriptionAr.length > 500 ? `${descriptionAr.slice(0, 497)}...` : descriptionAr);
@@ -413,6 +435,11 @@ export async function POST(request: NextRequest) {
 
   const notes = [
     manualNotes,
+    !organizationFromWebhook
+      ? organizationSource === "inferred_from_text"
+        ? `الجهة المعلنة لم تصل من Notion webhook؛ استُخرجت من نص المناقصة: ${organizationAr}`
+        : "الجهة المعلنة لم تصل من Notion webhook؛ سُجلت مؤقتاً كجهة غير محددة."
+      : "",
     telegramSourceUrl && telegramSourceUrl !== sourceUrl
       ? `مصدر Telegram: ${telegramSourceUrl}`
       : "",
@@ -474,7 +501,9 @@ export async function POST(request: NextRequest) {
       extracted: {
         telegramMessageIdPresent: true,
         titlePresent: true,
-        organizationPresent: true,
+        organizationPresent: Boolean(organizationFromWebhook),
+        organizationSource,
+        organizationValue: organizationAr,
       },
     });
 
