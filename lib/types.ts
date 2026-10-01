@@ -20,6 +20,10 @@ export interface Tender {
   tender_type: TenderType | string;
   governorate: string;
   location?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+  lat?: number | string;
+  lng?: number | string;
   capacity?: string;
   announcement_date?: TimestampLike;
   deadline?: TimestampLike;

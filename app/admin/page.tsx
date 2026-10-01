@@ -17,6 +17,8 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "f
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Link from "next/link";
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import AdminTenderAnalytics from "@/components/AdminTenderAnalytics";
+import AdminTenderMap from "@/components/AdminTenderMap";
 import { auth, db, isFirebaseConfigured, storage } from "@/lib/firebase";
 import {
   asRequirements,
@@ -38,6 +40,8 @@ type TenderForm = {
   tender_type: TenderType;
   governorate: string;
   location: string;
+  latitude: string;
+  longitude: string;
   capacity: string;
   announcement_date: string;
   deadline: string;
@@ -57,6 +61,7 @@ type TenderForm = {
 };
 
 type PublicApiStatus = "checking" | "ok" | "error";
+type AdminTab = "manage" | "analytics" | "map";
 
 const emptyForm: TenderForm = {
   title_ar: "",
@@ -67,6 +72,8 @@ const emptyForm: TenderForm = {
   tender_type: "tender",
   governorate: "غير محدد",
   location: "",
+  latitude: "",
+  longitude: "",
   capacity: "",
   announcement_date: "",
   deadline: "",
@@ -92,6 +99,8 @@ function removeEmptyValues(payload: Record<string, unknown>) {
 function formToPayload(form: TenderForm) {
   return removeEmptyValues({
     ...form,
+    latitude: form.latitude.trim() ? Number(form.latitude) : undefined,
+    longitude: form.longitude.trim() ? Number(form.longitude) : undefined,
     announcement_date: form.announcement_date ? Timestamp.fromDate(new Date(form.announcement_date)) : null,
     deadline: form.deadline ? Timestamp.fromDate(new Date(form.deadline)) : null,
     requirements: form.requirements
@@ -115,6 +124,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [listSearch, setListSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<AdminTab>("manage");
   const [publicApiStatus, setPublicApiStatus] = useState<PublicApiStatus>("checking");
   const [publicApiMessage, setPublicApiMessage] = useState("جار التحقق من اتصال واجهة العرض بالبيانات...");
 
@@ -252,6 +262,7 @@ export default function AdminPage() {
     setMessage("");
     setError("");
     setEditingId(tender.id || null);
+    setActiveTab("manage");
     setForm({
       title_ar: tender.title_ar || "",
       title_en: tender.title_en || "",
@@ -261,6 +272,8 @@ export default function AdminPage() {
       tender_type: (tender.tender_type as TenderType) || "tender",
       governorate: tender.governorate || "غير محدد",
       location: tender.location || "",
+      latitude: tender.latitude !== undefined && tender.latitude !== null ? String(tender.latitude) : "",
+      longitude: tender.longitude !== undefined && tender.longitude !== null ? String(tender.longitude) : "",
       capacity: tender.capacity || "",
       announcement_date: dateToInput(tender.announcement_date),
       deadline: dateToInput(tender.deadline),
@@ -461,6 +474,26 @@ export default function AdminPage() {
         </button>
       </section>
 
+      <nav className="sr-admin-tabs" aria-label="أقسام لوحة إدارة المناقصات">
+        <button type="button" className={activeTab === "manage" ? "is-active" : ""} onClick={() => setActiveTab("manage")}>
+          <span>01</span>
+          <div><strong>إدارة المناقصات</strong><small>إضافة، تعديل وإدارة السجلات</small></div>
+        </button>
+        <button type="button" className={activeTab === "analytics" ? "is-active" : ""} onClick={() => setActiveTab("analytics")}>
+          <span>02</span>
+          <div><strong>الإحصائيات والتحليل</strong><small>مؤشرات ورسوم وفلاتر مباشرة</small></div>
+        </button>
+        <button type="button" className={activeTab === "map" ? "is-active" : ""} onClick={() => setActiveTab("map")}>
+          <span>03</span>
+          <div><strong>الخريطة</strong><small>توزيع المناقصات على OpenStreetMap</small></div>
+        </button>
+      </nav>
+
+      {activeTab === "analytics" ? <AdminTenderAnalytics tenders={tenders} /> : null}
+      {activeTab === "map" ? <AdminTenderMap tenders={tenders} /> : null}
+
+      {activeTab === "manage" ? (
+        <>
       <section className="sr-admin-stats" aria-label="إحصاءات المناقصات">
         <div className="sr-admin-stat"><strong>{tenders.length}</strong><span>إجمالي السجلات</span></div>
         <div className="sr-admin-stat"><strong>{openCount}</strong><span>مناقصة مفتوحة</span></div>
@@ -518,7 +551,15 @@ export default function AdminPage() {
           </label>
           <label>
             الموقع الجغرافي
-            <input name="location" value={form.location} onChange={handleChange} />
+            <input name="location" value={form.location} onChange={handleChange} placeholder="مثال: مركز البحوث العلمية الزراعية – حلب" />
+          </label>
+          <label>
+            خط العرض Latitude
+            <input type="number" inputMode="decimal" step="any" name="latitude" value={form.latitude} onChange={handleChange} dir="ltr" placeholder="36.2021" />
+          </label>
+          <label>
+            خط الطول Longitude
+            <input type="number" inputMode="decimal" step="any" name="longitude" value={form.longitude} onChange={handleChange} dir="ltr" placeholder="37.1343" />
           </label>
           <label>
             القدرة المطلوبة
@@ -625,7 +666,11 @@ export default function AdminPage() {
 
       <section className="sr-admin-list">
         <div className="sr-admin-list__toolbar">
-          <h2>المناقصات المنشورة</h2>
+          <div>
+            <span className="sr-eyebrow">السجل التشغيلي</span>
+            <h2>المناقصات المنشورة</h2>
+            <p>إدارة الحالات والتعديل والوصول السريع إلى كل سجل.</p>
+          </div>
           <input
             className="sr-admin-list__search"
             type="search"
@@ -638,38 +683,57 @@ export default function AdminPage() {
 
         {visibleTenders.length === 0 ? (
           <p className="sr-state">لا توجد سجلات مطابقة للبحث.</p>
-        ) : null}
-
-        {visibleTenders.map((tender) => (
-          <article className="sr-admin-row" key={tender.id}>
-            <div>
-              <h3>{tender.title_ar || tender.title_en}</h3>
-              <p>{tender.organization_ar || tender.organization_en}</p>
-            </div>
-            <div className="sr-admin-row__actions">
-              <select
-                aria-label={`حالة ${tender.title_ar || tender.title_en || "المناقصة"}`}
-                value={tender.status || "open"}
-                onChange={(event) => void updateStatus(tender.id, event.target.value as TenderStatus)}
-              >
-                <option value="open">مفتوحة</option>
-                <option value="closed">مغلقة</option>
-                <option value="awarded">مُرساة</option>
-                <option value="cancelled">ملغاة</option>
-              </select>
-              <Link className="sr-button sr-button--ghost" href={`/tenders/${tender.id}`}>
-                عرض
-              </Link>
-              <button className="sr-button sr-button--ghost" type="button" onClick={() => editTender(tender)}>
-                تعديل
-              </button>
-              <button className="sr-button sr-button--danger" type="button" onClick={() => void removeTender(tender.id)}>
-                حذف
-              </button>
-            </div>
-          </article>
-        ))}
+        ) : (
+          <div className="sr-admin-table-wrap">
+            <table className="sr-admin-table">
+              <thead>
+                <tr>
+                  <th>المناقصة</th>
+                  <th>الجهة</th>
+                  <th>المحافظة</th>
+                  <th>النوع</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleTenders.map((tender) => (
+                  <tr key={tender.id}>
+                    <td data-label="المناقصة">
+                      <strong>{tender.title_ar || tender.title_en}</strong>
+                      {tender.capacity ? <small>{tender.capacity}</small> : null}
+                    </td>
+                    <td data-label="الجهة">{tender.organization_ar || tender.organization_en}</td>
+                    <td data-label="المحافظة">{tender.governorate || "غير محدد"}</td>
+                    <td data-label="النوع">{tender.energy_type || "غير محدد"}</td>
+                    <td data-label="الحالة">
+                      <select
+                        aria-label={`حالة ${tender.title_ar || tender.title_en || "المناقصة"}`}
+                        value={tender.status || "open"}
+                        onChange={(event) => void updateStatus(tender.id, event.target.value as TenderStatus)}
+                      >
+                        <option value="open">مفتوحة</option>
+                        <option value="closed">مغلقة</option>
+                        <option value="awarded">مُرساة</option>
+                        <option value="cancelled">ملغاة</option>
+                      </select>
+                    </td>
+                    <td data-label="الإجراءات">
+                      <div className="sr-admin-row__actions">
+                        <Link className="sr-button sr-button--ghost" href={`/tenders/${tender.id}`}>عرض</Link>
+                        <button className="sr-button sr-button--ghost" type="button" onClick={() => editTender(tender)}>تعديل</button>
+                        <button className="sr-button sr-button--danger" type="button" onClick={() => void removeTender(tender.id)}>حذف</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
+        </>
+      ) : null}
     </main>
   );
 }
