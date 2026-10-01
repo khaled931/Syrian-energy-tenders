@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import TenderMap from "@/components/TenderMap";
+
+const TenderMap = dynamic(() => import("@/components/TenderMap"), {
+  ssr: false,
+  loading: () => <div className="sr-state">جار تحميل الخريطة...</div>,
+});
 import { ENERGY_TYPES_AR, GOVERNORATES_AR, Tender, STATUS_LABELS_AR } from "@/lib/types";
 
 function hasPreciseCoordinates(tender: Tender) {
