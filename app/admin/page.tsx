@@ -500,9 +500,13 @@ export default function AdminPage() {
         <div className="sr-admin-stat"><strong>{inactiveCount}</strong><span>غير مفتوحة</span></div>
       </section>
 
-      <form className="sr-form" onSubmit={saveTender}>
+      <form className="sr-form sr-admin-editor" onSubmit={saveTender}>
         <div className="sr-form-title">
-          <h2>{editingId ? "تعديل مناقصة" : "إضافة مناقصة"}</h2>
+          <div className="sr-form-title__copy">
+            <span className="sr-eyebrow">{editingId ? "تحرير سجل" : "سجل جديد"}</span>
+            <h2>{editingId ? "تعديل مناقصة" : "إضافة مناقصة"}</h2>
+            <p>أدخل المعلومات بدقة. الحقول الإضافية مثل الإحداثيات والمصدر تحسن جودة الخريطة والتحليل.</p>
+          </div>
           {editingId ? (
             <button className="sr-button sr-button--ghost" type="button" onClick={() => resetForm()}>
               إلغاء التعديل
@@ -510,7 +514,14 @@ export default function AdminPage() {
           ) : null}
         </div>
 
-        <fieldset>
+        <nav className="sr-form-section-nav" aria-label="أقسام نموذج المناقصة">
+          <a href="#admin-tender-basic">المعلومات الأساسية</a>
+          <a href="#admin-tender-dates">المواعيد والتقديم</a>
+          <a href="#admin-tender-description">الوصف والمتطلبات</a>
+          <a href="#admin-tender-source">المصدر والمرفقات</a>
+        </nav>
+
+        <fieldset id="admin-tender-basic">
           <legend>معلومات أساسية</legend>
           <label>
             عنوان المناقصة بالعربية *
@@ -576,7 +587,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="admin-tender-dates">
           <legend>مواعيد وقيمة دفتر الشروط</legend>
           <label>
             تاريخ الإعلان
@@ -604,7 +615,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="admin-tender-description">
           <legend>الوصف والمتطلبات</legend>
           <label>
             ملخص عربي
@@ -628,7 +639,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset>
+        <fieldset id="admin-tender-source">
           <legend>مرفقات ومصدر وملاحظات</legend>
           <label>
             رابط المصدر
