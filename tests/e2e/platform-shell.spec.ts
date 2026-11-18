@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import snapshot from "../../lib/platform-navigation-fallback.json";
-import { resolvePlatformHref } from "../../lib/platform";
+import { readFileSync } from "node:fs";
+
+type NavigationEntry = { label: { ar: string; en: string }; href?: string; children?: NavigationEntry[] };
+const snapshot: Record<"ar" | "en", NavigationEntry[]> = JSON.parse(readFileSync(new URL("../../lib/platform-navigation-fallback.json", import.meta.url), "utf8"));
 
 const MAIN_SITE = "https://syrianrenewables.com";
 
@@ -156,7 +158,11 @@ for (const locale of ["ar", "en"] as const) {
     await page.goto(`/?lang=${locale}`);
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     const expected = snapshot[locale].flatMap(item => item.href ? [item] : (item.children || []))
-      .map(item => ({ text: item.label[locale], href: resolvePlatformHref(item.href!, locale), target: null }));
+      .map(item => ({
+        text: item.label[locale],
+        href: /^https?:\/\//i.test(item.href!) ? item.href : `${MAIN_SITE}/${locale}${item.href === "/" ? "" : item.href!.replace(/^\/(ar|en)(?=\/|$)/, "")}`,
+        target: null,
+      }));
     const actual = await page.locator("#sr-primary-navigation a").evaluateAll(links => links.map(link => ({
       text: link.textContent?.trim(), href: link.getAttribute("href"), target: link.getAttribute("target"),
     })));

@@ -2,7 +2,7 @@
    header-responsive.css and account-menu.module.css at dedfdb1. */
 body { line-height: 1.7; }
 .sr-platform-header { z-index: 50; }
-.sr-platform-header-inner { justify-content: initial; }
+.sr-platform-header-inner { justify-content: space-between; gap: 24px; }
 .sr-platform-tools { margin-inline-start: 0; }
 .sr-platform-icon-button, .sr-platform-menu-button, .sr-platform-language { width: 39px; height: 39px; border-radius: 12px; }
 .sr-platform-account {
