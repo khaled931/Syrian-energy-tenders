@@ -1,0 +1,42 @@
+/* Header/account metrics adapted from main-site header.module.css,
+   header-responsive.css and account-menu.module.css at dedfdb1. */
+body { line-height: 1.7; }
+.sr-platform-header { z-index: 50; }
+.sr-platform-header-inner { justify-content: initial; }
+.sr-platform-tools { margin-inline-start: 0; }
+.sr-platform-icon-button, .sr-platform-menu-button, .sr-platform-language { width: 39px; height: 39px; border-radius: 12px; }
+.sr-platform-account {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; padding: 6px 9px; border: 1px solid var(--sr-border);
+  border-radius: 10px; background: var(--sr-surface-soft); color: var(--sr-text);
+  text-decoration: none; font-size: .78rem; font-weight: 800; white-space: nowrap;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+.sr-platform-account:hover, .sr-platform-account:focus-visible {
+  color: var(--sr-primary); border-color: color-mix(in srgb, var(--sr-primary) 45%, var(--sr-border));
+  background: color-mix(in srgb, var(--sr-primary) 8%, var(--sr-surface)); outline: none;
+}
+.sr-platform-account-badge { padding: 1px 5px; border-radius: 999px; background: color-mix(in srgb, var(--sr-primary) 12%, var(--sr-surface)); color: var(--sr-primary); font-size: .62rem; line-height: 1.5; }
+.sr-platform-nav a { padding: 9px 10px; border-radius: 12px; font-size: .88rem; transition: .2s ease; }
+.sr-platform-logo-plate img { max-height: 80px; }
+@media (min-width: 981px) and (max-width: 1120px) {
+  .sr-platform-header-inner { gap: 3px; }
+  .sr-platform-brand { min-width: 0; margin-inline-end: 0; }
+  .sr-platform-nav { gap: 1px; }
+  .sr-platform-tools { gap: 4px; }
+  .sr-platform-logo-plate { width: 58px; height: 68px; padding: 3px 6px; border-radius: 13px; }
+  .sr-platform-nav > div > a, .sr-platform-nav > div > button { min-height: 38px; padding: 7px 3px; font-size: clamp(.61rem, .66vw, .69rem); gap: 2px; }
+  .sr-platform-tools > a, .sr-platform-tools > button { width: 34px; height: 34px; border-radius: 10px; }
+}
+@media (max-width: 980px) {
+  .sr-platform-nav a { padding: 12px; }
+  .sr-platform-nav-item.is-expanded > .sr-platform-dropdown { max-height: 720px; }
+}
+@media (max-width: 650px) {
+  .sr-platform-tools { gap: 8px; }
+  .sr-platform-nav { inset-inline: 16px; padding: 16px; }
+}
+@media (max-width: 640px) {
+  .sr-platform-account { width: 36px; min-width: 36px; padding-inline: 0; }
+  .sr-platform-account-label, .sr-platform-account-badge { display: none; }
+}

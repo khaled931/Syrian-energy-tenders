@@ -1,15 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode, type SVGProps } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type SVGProps } from "react";
 import {
   PLATFORM_LOGO,
   PLATFORM_MAIN_SITE,
   platformBrand,
-  platformNavigation,
+  platformNavigationByLocale,
   resolvePlatformHref,
   type PlatformLocale,
   type PlatformNavigationItem,
 } from "@/lib/platform";
+
+import PlatformAccountMenu from "@/components/PlatformAccountMenu";
+import { KitNewsletterForm } from "@/components/KitNewsletterForm";
+import { socialIcons } from "@/lib/socialIcons";
+
+type NavigationSet = Record<PlatformLocale, PlatformNavigationItem[]>;
 
 type PlatformContextValue = {
   locale: PlatformLocale;
@@ -39,32 +45,6 @@ const SunIcon = (props: SVGProps<SVGSVGElement>) => <Icon {...props}><circle cx=
 const MailIcon = (props: SVGProps<SVGSVGElement>) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></Icon>;
 const SendIcon = (props: SVGProps<SVGSVGElement>) => <Icon {...props}><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></Icon>;
 
-const socialMarks: Record<string, string> = {
-  linkedin: "in",
-  facebook: "f",
-  x: "X",
-  instagram: "◎",
-  youtube: "▶",
-  tiktok: "♪",
-  whatsapp: "WA",
-};
-
-function prepareNavigation(items: PlatformNavigationItem[], locale: PlatformLocale) {
-  const collator = new Intl.Collator(locale === "ar" ? "ar" : "en", {
-    usage: "sort",
-    sensitivity: "base",
-    ignorePunctuation: true,
-  });
-
-  return items.map((item) => {
-    if (item.key !== "services" || !item.children?.length) return item;
-    return {
-      ...item,
-      children: [...item.children].sort((a, b) => collator.compare(a.label[locale], b.label[locale])),
-    };
-  });
-}
-
 function OfficialLogo({ footer = false }: { footer?: boolean }) {
   return (
     <span className={footer ? "sr-platform-footer-logo" : "sr-platform-logo-plate"}>
@@ -83,11 +63,10 @@ function OfficialLogo({ footer = false }: { footer?: boolean }) {
   );
 }
 
-function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
+export function PlatformHeader({ locale, setLocale, navigation }: PlatformContextValue & { navigation: PlatformNavigationItem[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const navigation = useMemo(() => prepareNavigation(platformNavigation, locale), [locale]);
 
   function closeNavigation() {
     setMobileOpen(false);
@@ -136,8 +115,6 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
       <a
         className={className}
         href={href}
-        target={item.openInNewTab ? "_blank" : undefined}
-        rel={item.openInNewTab ? "noopener noreferrer" : undefined}
         aria-current={item.key === "energy-tenders" ? "page" : undefined}
         onClick={closeNavigation}
       >
@@ -179,17 +156,20 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
         </nav>
 
         <div className="sr-platform-tools">
-          <button
+          <PlatformAccountMenu locale={locale} />
+          <a
             className="sr-platform-language"
-            type="button"
+            href={`?lang=${locale === "ar" ? "en" : "ar"}`}
             aria-label={locale === "ar" ? "Switch to English" : "التبديل إلى العربية"}
-            onClick={() => {
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
               closeNavigation();
               setLocale(locale === "ar" ? "en" : "ar");
             }}
           >
             {locale === "ar" ? "EN" : "ع"}
-          </button>
+          </a>
           <button className="sr-platform-icon-button" type="button" onClick={toggleTheme} aria-label={locale === "ar" ? "تبديل الوضع اللوني" : "Toggle color theme"}>
             <MoonIcon className="sr-theme-icon sr-theme-icon-moon" width="18" height="18" />
             <SunIcon className="sr-theme-icon sr-theme-icon-sun" width="18" height="18" />
@@ -213,16 +193,16 @@ function PlatformHeader({ locale, setLocale }: PlatformContextValue) {
   );
 }
 
-function PlatformFooter({ locale }: { locale: PlatformLocale }) {
-  const footerLinks = platformNavigation.filter((item) => Boolean(item.href)).slice(0, 7);
+export function PlatformFooter({ locale }: { locale: PlatformLocale }) {
+  const footerLinks = platformNavigationByLocale[locale].filter((item) => Boolean(item.href)).slice(0, 7);
 
   return (
     <footer className="sr-platform-footer">
       <div className="sr-platform-shell sr-platform-footer-grid">
         <section className="sr-platform-footer-brand">
-          <a href={`${PLATFORM_MAIN_SITE}/${locale}`} aria-label={platformBrand.name[locale]}><OfficialLogo footer /></a>
+          <div className="sr-platform-footer-brand-row"><OfficialLogo footer /></div>
           <p>{locale === "ar" ? "منصة مستقلة للبيانات والتحليل والأخبار المتخصصة بقطاع الطاقة السوري." : "An independent platform for data, analysis, and specialist reporting on Syria’s energy sector."}</p>
-          <a className="sr-platform-footer-email" href={`mailto:${platformBrand.email}`}><MailIcon width="18" height="18" />{platformBrand.email}</a>
+          <a className="sr-platform-footer-email" href={`mailto:${platformBrand.email}`}><MailIcon width="18" height="18" /><span dir="ltr">{platformBrand.email}</span></a>
         </section>
 
         <section>
@@ -230,21 +210,22 @@ function PlatformFooter({ locale }: { locale: PlatformLocale }) {
           <div className="sr-platform-footer-links">
             {footerLinks.map((item) => <a key={item.key} href={resolvePlatformHref(item.href as string, locale)}>{item.label[locale]}</a>)}
             <a href={resolvePlatformHref("/events", locale)}>{locale === "ar" ? "أحداث ومواعيد هامة" : "Important Events and Dates"}</a>
+            <a href={resolvePlatformHref("/data-use-policy", locale)}>{locale === "ar" ? "سياسة استخدام البيانات" : "Data Use Policy"}</a>
           </div>
         </section>
 
         <section className="sr-platform-newsletter">
-          <SendIcon width="24" height="24" />
-          <h3>{locale === "ar" ? "اشترك في النشرة" : "Subscribe to the newsletter"}</h3>
+          <div className="sr-platform-newsletter-heading"><SendIcon width="20" height="20" />
+          <h3>{locale === "ar" ? "اشترك في النشرة" : "Subscribe to the newsletter"}</h3></div>
           <p>{locale === "ar" ? "ملخصات وتحليلات وتقارير دورية تصل مباشرة إلى بريدك." : "Periodic briefs, analysis, and reports delivered to your inbox."}</p>
-          <a className="sr-platform-subscribe" href={platformBrand.newsletter} target="_blank" rel="noopener noreferrer">{locale === "ar" ? "صفحة الاشتراك" : "Subscribe"}</a>
+          <KitNewsletterForm locale={locale} fallbackUrl={platformBrand.newsletter} />
         </section>
       </div>
 
       <div className="sr-platform-shell sr-platform-footer-bottom">
         <div className="sr-platform-socials">
           {Object.entries(platformBrand.social).map(([key, url]) => (
-            <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={key}><span aria-hidden="true">{socialMarks[key]}</span></a>
+            <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={socialIcons[key].label} title={socialIcons[key].label}><svg aria-hidden="true" focusable="false" viewBox={socialIcons[key].viewBox} fill="currentColor"><path d={socialIcons[key].path} /></svg></a>
           ))}
         </div>
         <p>© {new Date().getFullYear()} Syrian Renewables · Norway organization no. {platformBrand.organizationNumber}</p>
@@ -253,18 +234,28 @@ function PlatformFooter({ locale }: { locale: PlatformLocale }) {
   );
 }
 
-export default function PlatformShell({ children }: { children: ReactNode }) {
+export default function PlatformShell({ children, navigation = platformNavigationByLocale }: { children: ReactNode; navigation?: NavigationSet }) {
   const [locale, setLocaleState] = useState<PlatformLocale>("ar");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("sr-locale");
-      if (saved === "ar" || saved === "en") setLocaleState(saved);
-    } catch { /* Arabic remains the safe default */ }
+    function readLocale() {
+      const requested = new URL(window.location.href).searchParams.get("lang");
+      if (requested === "ar" || requested === "en") { setLocaleState(requested); return; }
+      try {
+        const saved = window.localStorage.getItem("sr-locale");
+        if (saved === "ar" || saved === "en") setLocaleState(saved);
+      } catch { /* Arabic remains the safe default */ }
+    }
+    readLocale();
+    window.addEventListener("popstate", readLocale);
+    return () => window.removeEventListener("popstate", readLocale);
   }, []);
 
   function setLocale(next: PlatformLocale) {
     setLocaleState(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.pushState(null, "", url.pathname + url.search + url.hash);
     try { window.localStorage.setItem("sr-locale", next); } catch { /* current-page locale still works */ }
   }
 
@@ -276,7 +267,7 @@ export default function PlatformShell({ children }: { children: ReactNode }) {
   return (
     <PlatformContext.Provider value={{ locale, setLocale }}>
       <a className="sr-platform-skip" href="#main-content">{locale === "ar" ? "انتقل إلى المحتوى الرئيسي" : "Skip to main content"}</a>
-      <PlatformHeader locale={locale} setLocale={setLocale} />
+      <PlatformHeader locale={locale} setLocale={setLocale} navigation={navigation[locale]} />
       <div id="main-content" dir={locale === "ar" ? "rtl" : "ltr"}>{children}</div>
       <PlatformFooter locale={locale} />
     </PlatformContext.Provider>

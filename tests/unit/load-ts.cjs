@@ -15,6 +15,10 @@ function loadTs(relativePath, mocks = {}) {
     module.filename = filename;
     module.paths = Module._nodeModulePaths(path.dirname(filename));
     cache.set(filename, module);
+    if (filename.endsWith(".json")) {
+      module.exports = JSON.parse(fs.readFileSync(filename, "utf8"));
+      return module.exports;
+    }
     const normalRequire = module.require.bind(module);
     module.require = (name) => {
       if (Object.hasOwn(mocks, name)) return mocks[name];

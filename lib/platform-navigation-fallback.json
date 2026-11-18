@@ -1,0 +1,996 @@
+{
+  "ar": [
+    {
+      "_key": "home",
+      "label": {
+        "ar": "الصفحة الرئيسية",
+        "en": "Home"
+      },
+      "href": "/",
+      "external": false,
+      "openInNewTab": false
+    },
+    {
+      "_key": "news",
+      "label": {
+        "ar": "أخبار الطاقة في سورية",
+        "en": "Syria Energy News"
+      },
+      "href": "/news",
+      "external": false,
+      "openInNewTab": false
+    },
+    {
+      "_key": "renewables",
+      "label": {
+        "ar": "الطاقات المتجددة",
+        "en": "Renewable Energy"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "electric-vehicles",
+          "href": "/electric-vehicles",
+          "label": {
+            "ar": "السيارات الكهربائية في سوريا",
+            "en": "Electric Vehicles in Syria"
+          }
+        },
+        {
+          "_key": "solar-energy",
+          "label": {
+            "ar": "الطاقة الشمسية",
+            "en": "Solar Energy"
+          },
+          "href": "/solar-energy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "hydropower",
+          "label": {
+            "ar": "الطاقة الكهرومائية",
+            "en": "Hydropower"
+          },
+          "href": "/hydropower",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "biogas",
+          "label": {
+            "ar": "الغاز الحيوي",
+            "en": "Biogas"
+          },
+          "href": "/biogas",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "storage-batteries",
+          "label": {
+            "ar": "أنظمة التخزين والبطاريات",
+            "en": "Storage Systems & Batteries"
+          },
+          "href": "/storage-and-batteries",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "wind-energy",
+          "label": {
+            "ar": "طاقة الرياح",
+            "en": "Wind Energy"
+          },
+          "href": "/wind-energy",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    },
+    {
+      "_key": "services",
+      "label": {
+        "ar": "خدماتنا",
+        "en": "Our Services"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "energy-contracts",
+          "href": "https://contracts.syrianrenewables.com",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "اتفاقيات وعقود الطاقة",
+            "en": "Energy Agreements & Contracts"
+          }
+        },
+        {
+          "_key": "emissions-climate",
+          "href": "https://climate.syrianrenewables.com/ar",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "الانبعاثات والمناخ",
+            "en": "Emissions and Climate"
+          }
+        },
+        {
+          "_key": "reports-research",
+          "label": {
+            "ar": "التقارير والأبحاث",
+            "en": "Reports and Research"
+          },
+          "href": "/reports",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "ev-map",
+          "href": "/ev-chargers",
+          "label": {
+            "ar": "خريطة شواحن السيارات الكهربائية",
+            "en": "EV Charging Map"
+          }
+        },
+        {
+          "_key": "energy-market",
+          "href": "https://market.syrianrenewables.com",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "سوق الطاقة",
+            "en": "Energy Market"
+          }
+        },
+        {
+          "_key": "fuel-price-tracker",
+          "label": {
+            "ar": "متتبع أسعار الوقود في سورية",
+            "en": "Syrian Fuel Price Tracker"
+          },
+          "href": "https://fuel-prices.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "policy-tracker",
+          "label": {
+            "ar": "متتبع سياسات الطاقة",
+            "en": "Energy Policy Tracker"
+          },
+          "href": "https://policies.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "project-tracker",
+          "label": {
+            "ar": "متتبع مشاريع الطاقة",
+            "en": "Energy Project Tracker"
+          },
+          "href": "https://projects.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "energy-tenders",
+          "label": {
+            "ar": "متتبع مناقصات الطاقة",
+            "en": "Energy Tenders Tracker"
+          },
+          "href": "https://tender.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "energy-advisor",
+          "href": "https://advisor.syrianrenewables.com/ar",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "مستشار الطاقة",
+            "en": "Energy Advisor"
+          }
+        },
+        {
+          "_key": "major-projects",
+          "label": {
+            "ar": "مشاريع كبرى",
+            "en": "Major Projects"
+          },
+          "href": "https://major-projects.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "energy-jobs",
+          "label": {
+            "ar": "وظائف الطاقة",
+            "en": "Energy Jobs"
+          },
+          "href": "https://syr-res-jobs.vercel.app/",
+          "external": true,
+          "openInNewTab": true
+        }
+      ]
+    },
+    {
+      "_key": "useful-tools",
+      "label": {
+        "ar": "أدوات مفيدة",
+        "en": "Useful Tools"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "damascus-bourse-news",
+          "href": "https://bourse.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "أخبار سوق دمشق للأوراق المالية",
+            "en": "Damascus Securities Exchange News"
+          }
+        },
+        {
+          "_key": "electricity-meter-reading",
+          "href": "https://meter.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "إرسال قراءة العداد الكهربائي",
+            "en": "Submit Electricity Meter Reading"
+          }
+        },
+        {
+          "_key": "un-data-portal",
+          "href": "/data",
+          "label": {
+            "ar": "بوابة بيانات UN",
+            "en": "UN Data Portal"
+          }
+        },
+        {
+          "_key": "solar-calculator",
+          "href": "https://solarist.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "حاسبة الطاقة الشمسية",
+            "en": "Solar Energy Calculator"
+          }
+        },
+        {
+          "_key": "electricity-bill-calculator",
+          "href": "/electricity-bill-calculator",
+          "label": {
+            "ar": "حاسبة فاتورة الكهرباء",
+            "en": "Electricity Bill Calculator"
+          }
+        },
+        {
+          "_key": "power-plant-map",
+          "href": "https://syr-res-power-plant-map.vercel.app/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "خرائط محطات الطاقة",
+            "en": "Power Plant Maps"
+          }
+        },
+        {
+          "_key": "resources-map",
+          "href": "/resources-map",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "خريطة الموارد",
+            "en": "Resources map"
+          }
+        },
+        {
+          "_key": "oil-gas-map",
+          "href": "https://oilgas-map.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "خريطة النفط والغاز",
+            "en": "Oil & Gas Map"
+          }
+        },
+        {
+          "_key": "renewable-energy-sale-guide",
+          "href": "/renewable-energy-sale-guide",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "دليل بيع الطاقة المتجددة",
+            "en": "Renewable Energy Sale Guide"
+          }
+        },
+        {
+          "_key": "ninja-simulator",
+          "href": "https://ninja.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "محاكاة الطاقة الشمسية والريحية في سورية",
+            "en": "Solar and Wind Energy Simulation in Syria"
+          }
+        },
+        {
+          "_key": "pvgis",
+          "href": "/pvgis",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "محاكي PVGIS",
+            "en": "PVGIS"
+          }
+        },
+        {
+          "_key": "fuel-95-stations",
+          "label": {
+            "ar": "محطات بنزين 95 في سورية",
+            "en": "95 Octane Fuel Stations in Syria"
+          },
+          "href": "/services/fuel-95-stations",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "energy-lab",
+          "href": "/energy-lab",
+          "label": {
+            "ar": "مختبر الطاقة",
+            "en": "Energy Lab"
+          }
+        }
+      ]
+    },
+    {
+      "_key": "official-institutions",
+      "label": {
+        "ar": "هيئات ومؤسسات رسمية",
+        "en": "Official Institutions"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "ministry-energy",
+          "label": {
+            "ar": "وزارة الطاقة السورية",
+            "en": "Syrian Ministry of Energy"
+          },
+          "href": "/ministry-of-energy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "syrian-petroleum-company",
+          "label": {
+            "ar": "الشركة السورية للبترول",
+            "en": "Syrian Petroleum Company"
+          },
+          "href": "/syrian-petroleum-company",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "syrian-electricity-company",
+          "label": {
+            "ar": "الشركة السورية للكهرباء",
+            "en": "Syrian Electricity Company"
+          },
+          "href": "/syrian-electricity-company",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "renewable-energy-support-fund",
+          "label": {
+            "ar": "صندوق دعم الطاقات المتجددة",
+            "en": "Renewable Energy Support Fund"
+          },
+          "href": "/renewable-energy-support-fund",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "nerc",
+          "label": {
+            "ar": "المركز الوطني لبحوث الطاقة NERC",
+            "en": "National Energy Research Center (NERC)"
+          },
+          "href": "/nerc",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    },
+    {
+      "_key": "about-platform",
+      "label": {
+        "ar": "عن المنصة",
+        "en": "About the Platform"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "about-us",
+          "label": {
+            "ar": "من نحن",
+            "en": "Who We Are"
+          },
+          "href": "/about",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "contact",
+          "label": {
+            "ar": "تواصل معنا",
+            "en": "Contact Us"
+          },
+          "href": "/contact",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "join-team",
+          "label": {
+            "ar": "انضم إلى فريقنا",
+            "en": "Join Our Team"
+          },
+          "href": "/join-our-team",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "privacy-policy",
+          "label": {
+            "ar": "سياسة الخصوصية",
+            "en": "Privacy Policy"
+          },
+          "href": "/privacy-policy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "partnerships",
+          "label": {
+            "ar": "شراكات",
+            "en": "Partnerships"
+          },
+          "href": "/partnerships",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "energy-survey",
+          "label": {
+            "ar": "استطلاعات الطاقة",
+            "en": "Energy Surveys"
+          },
+          "href": "/energy-survey",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "in-the-media",
+          "label": {
+            "ar": "في الإعلام",
+            "en": "In the Media"
+          },
+          "href": "/in-the-media",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    }
+  ],
+  "en": [
+    {
+      "_key": "home",
+      "label": {
+        "ar": "الصفحة الرئيسية",
+        "en": "Home"
+      },
+      "href": "/",
+      "external": false,
+      "openInNewTab": false
+    },
+    {
+      "_key": "news",
+      "label": {
+        "ar": "أخبار الطاقة في سورية",
+        "en": "Syria Energy News"
+      },
+      "href": "/news",
+      "external": false,
+      "openInNewTab": false
+    },
+    {
+      "_key": "renewables",
+      "label": {
+        "ar": "الطاقات المتجددة",
+        "en": "Renewable Energy"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "biogas",
+          "label": {
+            "ar": "الغاز الحيوي",
+            "en": "Biogas"
+          },
+          "href": "/biogas",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "electric-vehicles",
+          "href": "/electric-vehicles",
+          "label": {
+            "ar": "السيارات الكهربائية في سوريا",
+            "en": "Electric Vehicles in Syria"
+          }
+        },
+        {
+          "_key": "hydropower",
+          "label": {
+            "ar": "الطاقة الكهرومائية",
+            "en": "Hydropower"
+          },
+          "href": "/hydropower",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "solar-energy",
+          "label": {
+            "ar": "الطاقة الشمسية",
+            "en": "Solar Energy"
+          },
+          "href": "/solar-energy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "storage-batteries",
+          "label": {
+            "ar": "أنظمة التخزين والبطاريات",
+            "en": "Storage Systems & Batteries"
+          },
+          "href": "/storage-and-batteries",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "wind-energy",
+          "label": {
+            "ar": "طاقة الرياح",
+            "en": "Wind Energy"
+          },
+          "href": "/wind-energy",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    },
+    {
+      "_key": "services",
+      "label": {
+        "ar": "خدماتنا",
+        "en": "Our Services"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "emissions-climate",
+          "href": "https://climate.syrianrenewables.com/en",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "الانبعاثات والمناخ",
+            "en": "Emissions and Climate"
+          }
+        },
+        {
+          "_key": "energy-advisor",
+          "href": "https://advisor.syrianrenewables.com/en",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "مستشار الطاقة",
+            "en": "Energy Advisor"
+          }
+        },
+        {
+          "_key": "energy-contracts",
+          "href": "https://contracts.syrianrenewables.com",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "اتفاقيات وعقود الطاقة",
+            "en": "Energy Agreements & Contracts"
+          }
+        },
+        {
+          "_key": "energy-jobs",
+          "label": {
+            "ar": "وظائف الطاقة",
+            "en": "Energy Jobs"
+          },
+          "href": "https://syr-res-jobs.vercel.app/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "energy-market",
+          "href": "https://market.syrianrenewables.com",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "سوق الطاقة",
+            "en": "Energy Market"
+          }
+        },
+        {
+          "_key": "policy-tracker",
+          "label": {
+            "ar": "متتبع سياسات الطاقة",
+            "en": "Energy Policy Tracker"
+          },
+          "href": "https://policies.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "project-tracker",
+          "label": {
+            "ar": "متتبع مشاريع الطاقة",
+            "en": "Energy Project Tracker"
+          },
+          "href": "https://projects.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "energy-tenders",
+          "label": {
+            "ar": "متتبع مناقصات الطاقة",
+            "en": "Energy Tenders Tracker"
+          },
+          "href": "https://tender.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "ev-map",
+          "href": "/ev-chargers",
+          "label": {
+            "ar": "خريطة شواحن السيارات الكهربائية",
+            "en": "EV Charging Map"
+          }
+        },
+        {
+          "_key": "major-projects",
+          "label": {
+            "ar": "مشاريع كبرى",
+            "en": "Major Projects"
+          },
+          "href": "https://major-projects.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        },
+        {
+          "_key": "reports-research",
+          "label": {
+            "ar": "التقارير والأبحاث",
+            "en": "Reports and Research"
+          },
+          "href": "/reports",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "fuel-price-tracker",
+          "label": {
+            "ar": "متتبع أسعار الوقود في سورية",
+            "en": "Syrian Fuel Price Tracker"
+          },
+          "href": "https://fuel-prices.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true
+        }
+      ]
+    },
+    {
+      "_key": "useful-tools",
+      "label": {
+        "ar": "أدوات مفيدة",
+        "en": "Useful Tools"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "fuel-95-stations",
+          "label": {
+            "ar": "محطات بنزين 95 في سورية",
+            "en": "95 Octane Fuel Stations in Syria"
+          },
+          "href": "/services/fuel-95-stations",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "damascus-bourse-news",
+          "href": "https://bourse.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "أخبار سوق دمشق للأوراق المالية",
+            "en": "Damascus Securities Exchange News"
+          }
+        },
+        {
+          "_key": "electricity-bill-calculator",
+          "href": "/electricity-bill-calculator",
+          "label": {
+            "ar": "حاسبة فاتورة الكهرباء",
+            "en": "Electricity Bill Calculator"
+          }
+        },
+        {
+          "_key": "energy-lab",
+          "href": "/energy-lab",
+          "label": {
+            "ar": "مختبر الطاقة",
+            "en": "Energy Lab"
+          }
+        },
+        {
+          "_key": "oil-gas-map",
+          "href": "https://oilgas-map.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "خريطة النفط والغاز",
+            "en": "Oil & Gas Map"
+          }
+        },
+        {
+          "_key": "power-plant-map",
+          "href": "https://syr-res-power-plant-map.vercel.app/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "خرائط محطات الطاقة",
+            "en": "Power Plant Maps"
+          }
+        },
+        {
+          "_key": "pvgis",
+          "href": "/pvgis",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "محاكي PVGIS",
+            "en": "PVGIS"
+          }
+        },
+        {
+          "_key": "renewable-energy-sale-guide",
+          "href": "/renewable-energy-sale-guide",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "دليل بيع الطاقة المتجددة",
+            "en": "Renewable Energy Sale Guide"
+          }
+        },
+        {
+          "_key": "resources-map",
+          "href": "/resources-map",
+          "external": false,
+          "openInNewTab": false,
+          "label": {
+            "ar": "خريطة الموارد",
+            "en": "Resources map"
+          }
+        },
+        {
+          "_key": "ninja-simulator",
+          "href": "https://ninja.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": true,
+          "label": {
+            "ar": "محاكاة الطاقة الشمسية والريحية في سورية",
+            "en": "Solar and Wind Energy Simulation in Syria"
+          }
+        },
+        {
+          "_key": "solar-calculator",
+          "href": "https://solarist.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "حاسبة الطاقة الشمسية",
+            "en": "Solar Energy Calculator"
+          }
+        },
+        {
+          "_key": "electricity-meter-reading",
+          "href": "https://meter.syrianrenewables.com/",
+          "external": true,
+          "openInNewTab": false,
+          "label": {
+            "ar": "إرسال قراءة العداد الكهربائي",
+            "en": "Submit Electricity Meter Reading"
+          }
+        },
+        {
+          "_key": "un-data-portal",
+          "href": "/data",
+          "label": {
+            "ar": "بوابة بيانات UN",
+            "en": "UN Data Portal"
+          }
+        }
+      ]
+    },
+    {
+      "_key": "official-institutions",
+      "label": {
+        "ar": "هيئات ومؤسسات رسمية",
+        "en": "Official Institutions"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "ministry-energy",
+          "label": {
+            "ar": "وزارة الطاقة السورية",
+            "en": "Syrian Ministry of Energy"
+          },
+          "href": "/ministry-of-energy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "syrian-petroleum-company",
+          "label": {
+            "ar": "الشركة السورية للبترول",
+            "en": "Syrian Petroleum Company"
+          },
+          "href": "/syrian-petroleum-company",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "syrian-electricity-company",
+          "label": {
+            "ar": "الشركة السورية للكهرباء",
+            "en": "Syrian Electricity Company"
+          },
+          "href": "/syrian-electricity-company",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "renewable-energy-support-fund",
+          "label": {
+            "ar": "صندوق دعم الطاقات المتجددة",
+            "en": "Renewable Energy Support Fund"
+          },
+          "href": "/renewable-energy-support-fund",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "nerc",
+          "label": {
+            "ar": "المركز الوطني لبحوث الطاقة NERC",
+            "en": "National Energy Research Center (NERC)"
+          },
+          "href": "/nerc",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    },
+    {
+      "_key": "about-platform",
+      "label": {
+        "ar": "عن المنصة",
+        "en": "About the Platform"
+      },
+      "external": false,
+      "openInNewTab": false,
+      "children": [
+        {
+          "_key": "about-us",
+          "label": {
+            "ar": "من نحن",
+            "en": "Who We Are"
+          },
+          "href": "/about",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "contact",
+          "label": {
+            "ar": "تواصل معنا",
+            "en": "Contact Us"
+          },
+          "href": "/contact",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "join-team",
+          "label": {
+            "ar": "انضم إلى فريقنا",
+            "en": "Join Our Team"
+          },
+          "href": "/join-our-team",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "privacy-policy",
+          "label": {
+            "ar": "سياسة الخصوصية",
+            "en": "Privacy Policy"
+          },
+          "href": "/privacy-policy",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "partnerships",
+          "label": {
+            "ar": "شراكات",
+            "en": "Partnerships"
+          },
+          "href": "/partnerships",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "energy-survey",
+          "label": {
+            "ar": "استطلاعات الطاقة",
+            "en": "Energy Surveys"
+          },
+          "href": "/energy-survey",
+          "external": false,
+          "openInNewTab": false
+        },
+        {
+          "_key": "in-the-media",
+          "label": {
+            "ar": "في الإعلام",
+            "en": "In the Media"
+          },
+          "href": "/in-the-media",
+          "external": false,
+          "openInNewTab": false
+        }
+      ]
+    }
+  ]
+}
