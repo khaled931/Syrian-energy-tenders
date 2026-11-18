@@ -11,7 +11,7 @@
 
 - Both diagnostic GET and import POST require the existing `x-syrian-renewables-sync-secret` credential. Its value remains server-side; it must never be embedded in the admin frontend or a URL. Unauthenticated requests do not read or write Firestore diagnostics. No new secret or account permission is required.
 - Diagnostic events replace the last event instead of merging unrelated historical fields. JSON request bodies are bounded at 1 MiB, including chunked bodies.
-- JSON-LD escapes `<` before insertion into HTML. The public serializer remains a whitelist and continues to omit sources, attachments, notes and new administrative metadata.
+- JSON-LD escapes `<` before insertion into HTML. Unknown stored statuses are normalized to a safe `unknown` state before entering Leaflet marker HTML. The public serializer remains a whitelist and continues to omit sources, attachments, notes and new administrative metadata.
 - The editor validates required fields, calendar dates/order, coordinate pairs and HTTP(S) links before storage/database writes.
 - A draft reserves one document ID and one upload path. Files upload before a new record is committed. A failed upload creates no public record; retrying the same open form reuses its ID/path. A successful upload is reused after a database failure. A transaction preserves `created_at` if acknowledgment was lost after a successful creation. Reloading/discarding the editor ends its in-memory retry context; check the list before starting a new record after an uncertain result.
 - Edits explicitly delete cleared optional fields. A transaction rejects stale edits rather than overwriting a newer administrator/import update. New private metadata: `save_operation_id`, `created_by_uid`, `updated_by_uid`, `status_origin`.

@@ -46,6 +46,9 @@ test("final statuses survive expiration; invalid dates do not crash rendering", 
   assert.equal(types.normalizeDate(new Date("invalid")), null);
   assert.equal(state({ deadline: "invalid" }, "2026-11-18T10:00:00Z").daysRemaining, null);
   assert.equal(types.isValidDateOnly("2026-02-30"), false);
+  const unsafe = state({ status: '\"><img src=x onerror=alert(1)>', deadline: "2026-11-19" }, "2026-11-18T10:00:00Z");
+  assert.equal(unsafe.displayStatus, "unknown");
+  assert.equal(unsafe.isClosingSoon, false);
 });
 
 test("feed refresh preserves awarded, cancelled and manually selected statuses", () => {

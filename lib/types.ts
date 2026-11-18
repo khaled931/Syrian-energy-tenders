@@ -53,6 +53,7 @@ export const STATUS_LABELS_AR: Record<string, string> = {
   closed: "مغلقة",
   awarded: "مُرساة",
   cancelled: "ملغاة",
+  unknown: "غير محدد",
 };
 
 export const STATUS_LABELS_EN: Record<string, string> = {
@@ -60,6 +61,7 @@ export const STATUS_LABELS_EN: Record<string, string> = {
   closed: "Closed",
   awarded: "Awarded",
   cancelled: "Cancelled",
+  unknown: "Unknown",
 };
 
 export const TENDER_TYPE_LABELS_AR: Record<string, string> = {
@@ -221,8 +223,10 @@ export function formatDate(value?: TimestampLike, locale = "ar-SY"): string {
 
 export function getTenderDeadlineState(tender: Tender, warningDays = DEFAULT_DEADLINE_WARNING_DAYS, now = new Date()) {
   const deadlineDate = normalizeDate(tender.deadline);
-  const normalizedStatus = (tender.status || "open").toLowerCase();
-  const finalStatuses = ["closed", "awarded", "cancelled"];
+  const rawStatus = String(tender.status || "open").toLowerCase();
+  // Status also enters Leaflet marker HTML; never pass arbitrary stored text.
+  const normalizedStatus = ["open", "closed", "awarded", "cancelled"].includes(rawStatus) ? rawStatus : "unknown";
+  const finalStatuses = ["closed", "awarded", "cancelled", "unknown"];
 
   if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) {
     return {
