@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --test tests/unit/*.test.cjs"
   },
   "dependencies": {
     "@fontsource/cantora-one": "5.2.8",

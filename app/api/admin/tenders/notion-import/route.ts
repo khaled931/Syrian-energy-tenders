@@ -1,7 +1,10 @@
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
+import { importedTenderStatus, importDatePrecision } from "@/lib/tenderImport";
+import { dateToInput, isValidDateOnly } from "@/lib/types";
+import { BodyTooLargeError, readBoundedJson } from "@/lib/requestBody";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -156,15 +159,6 @@ function asTimestamp(value: string) {
   return Timestamp.fromDate(date);
 }
 
-function deadlineStatus(value: string) {
-  if (!value) return "open";
-  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "open";
-  if (dateOnly) date.setUTCHours(23, 59, 59, 999);
-  return date.getTime() < Date.now() ? "closed" : "open";
-}
-
 function inferEnergyType(category: string, title: string, description: string) {
   const text = `${category} ${title} ${description}`.toLowerCase();
 
@@ -247,7 +241,6 @@ async function writeWebhookDebug(data: Record<string, unknown>) {
         ...data,
         receivedAt: new Date().toISOString(),
       },
-      { merge: true },
     );
   } catch (error) {
     console.error(
@@ -257,11 +250,18 @@ async function writeWebhookDebug(data: Record<string, unknown>) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const headers = {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
   };
+
+  // Diagnostics use the existing automation credential. Do not disclose even
+  // configuration flags, or read Firestore, before authentication succeeds.
+  const expectedSecret = process.env.NOTION_TENDER_WEBHOOK_SECRET?.trim() || "";
+  if (!secretMatches(request, expectedSecret)) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401, headers });
+  }
 
   let lastWebhookDebug: Record<string, unknown> | null = null;
 
@@ -308,11 +308,7 @@ export async function POST(request: NextRequest) {
   const authMatched = secretMatches(request, expectedSecret);
 
   if (!authMatched) {
-    await writeWebhookDebug({
-      result: "unauthorized",
-      authHeaderPresent,
-      authMatched: false,
-    });
+    // Untrusted requests must not generate billable diagnostic database writes.
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401, headers });
   }
 
@@ -325,10 +321,13 @@ export async function POST(request: NextRequest) {
 
   let body: JsonRecord;
   try {
-    const parsed = await request.json();
+    const parsed = await readBoundedJson(request);
     if (!isRecord(parsed)) throw new Error("invalid_json_object");
     body = parsed;
-  } catch {
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return NextResponse.json({ ok: false, error: "body_too_large" }, { status: 413, headers });
+    }
     await writeWebhookDebug({
       result: "invalid_json",
       authHeaderPresent,
@@ -419,6 +418,18 @@ export async function POST(request: NextRequest) {
   const announcementDateRaw = readField(body, ["تاريخ الإعلان", "announcement_date"]);
   const deadlineRaw = readField(body, ["آخر موعد للتقديم", "deadline"]);
   const sourcePublishedAtRaw = readField(body, ["التاريخ والوقت", "source_published_at"]);
+  for (const [field, value] of Object.entries({ announcement_date: announcementDateRaw, deadline: deadlineRaw, source_published_at: sourcePublishedAtRaw })) {
+    if (!value) continue;
+    const valid = importDatePrecision(value) === "date"
+      ? isValidDateOnly(value)
+      : isValidDateOnly(value.slice(0, 10)) && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/i.test(value) && Boolean(asTimestamp(value));
+    if (!valid) return NextResponse.json({ ok: false, error: "invalid_date", field }, { status: 422, headers });
+  }
+  if (announcementDateRaw && deadlineRaw &&
+      dateToInput(asTimestamp(deadlineRaw), importDatePrecision(deadlineRaw)) <
+      dateToInput(asTimestamp(announcementDateRaw), importDatePrecision(announcementDateRaw))) {
+    return NextResponse.json({ ok: false, error: "deadline_before_announcement" }, { status: 422, headers });
+  }
   const location = readField(body, ["الموقع", "location"]);
   const capacity = readField(body, ["القدرة", "capacity"]);
   const submissionMethod = readField(body, ["طريقة التقديم", "submission_method"]);
@@ -458,7 +469,7 @@ export async function POST(request: NextRequest) {
     capacity,
     announcement_date: asTimestamp(announcementDateRaw),
     deadline: asTimestamp(deadlineRaw),
-    status: deadlineStatus(deadlineRaw),
+    deadline_precision: deadlineRaw ? importDatePrecision(deadlineRaw) : undefined,
     document_fee: documentFee,
     currency,
     submission_method:
@@ -476,19 +487,22 @@ export async function POST(request: NextRequest) {
     notion_page_url: notionPageUrl,
     source_published_at: asTimestamp(sourcePublishedAtRaw),
     import_source: "notion_telegram_feed",
+    save_operation_id: randomUUID(),
     updated_at: FieldValue.serverTimestamp(),
   });
 
   try {
     const db = getAdminDb();
     const ref = db.collection("tenders").doc(tenderId);
-    const existing = await ref.get();
-
-    if (!existing.exists) {
-      payload.created_at = FieldValue.serverTimestamp();
-    }
-
-    await ref.set(payload, { merge: true });
+    const operation = await db.runTransaction(async (transaction) => {
+      const existing = await transaction.get(ref);
+      const data = existing.data() || {};
+      const status = importedTenderStatus(data, payload);
+      const write = { ...payload, status, status_origin: data.status_origin || "import" };
+      if (!existing.exists) Object.assign(write, { created_at: FieldValue.serverTimestamp() });
+      transaction.set(ref, write, { merge: true });
+      return existing.exists ? "updated" : "created";
+    });
 
     await writeWebhookDebug({
       result: "success",
@@ -497,7 +511,7 @@ export async function POST(request: NextRequest) {
       topLevelKeys,
       reviewStatus,
       tenderId,
-      operation: existing.exists ? "updated" : "created",
+      operation,
       extracted: {
         telegramMessageIdPresent: true,
         titlePresent: true,
@@ -511,11 +525,11 @@ export async function POST(request: NextRequest) {
       {
         ok: true,
         tenderId,
-        operation: existing.exists ? "updated" : "created",
+        operation,
         adminUrl: `/admin`,
         tenderUrl: `/tenders/${tenderId}`,
       },
-      { status: existing.exists ? 200 : 201, headers },
+      { status: operation === "updated" ? 200 : 201, headers },
     );
   } catch (error) {
     console.error(

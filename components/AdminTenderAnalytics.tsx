@@ -1,5 +1,6 @@
 "use client";
 
+import { useTenderClock } from "@/lib/useTenderClock";
 import { useMemo, useState } from "react";
 import {
   ENERGY_TYPES_AR,
@@ -115,10 +116,11 @@ function TrendChart({ items }: { items: Tender[] }) {
 }
 
 export default function AdminTenderAnalytics({ tenders }: { tenders: Tender[] }) {
+  const now = useTenderClock();
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
 
   const filtered = useMemo(() => tenders.filter((tender) => {
-    if (filters.status !== "all" && (tender.status || "open") !== filters.status) return false;
+    if (filters.status !== "all" && getTenderDeadlineState(tender, undefined, now).displayStatus !== filters.status) return false;
     if (filters.energy !== "all" && tender.energy_type !== filters.energy) return false;
     if (filters.governorate !== "all" && tender.governorate !== filters.governorate) return false;
     if (filters.tenderType !== "all" && tender.tender_type !== filters.tenderType) return false;
@@ -133,18 +135,18 @@ export default function AdminTenderAnalytics({ tenders }: { tenders: Tender[] })
       if (!announcement || announcement > to) return false;
     }
     return true;
-  }), [filters, tenders]);
+  }), [filters, now, tenders]);
 
-  const open = filtered.filter((tender) => (tender.status || "open") === "open").length;
+  const open = filtered.filter((tender) => getTenderDeadlineState(tender, undefined, now).displayStatus === "open").length;
   const awarded = filtered.filter((tender) => tender.status === "awarded").length;
-  const closingSoon = filtered.filter((tender) => getTenderDeadlineState(tender, 7).isClosingSoon).length;
+  const closingSoon = filtered.filter((tender) => getTenderDeadlineState(tender, 7, now).isClosingSoon).length;
   const needsReview = filtered.filter((tender) =>
     ["Low Confidence", "Unverified"].includes(tender.data_quality || "") ||
     !tender.deadline ||
     !tender.source_url,
   ).length;
 
-  const statusData = countBy(filtered, (item) => item.status || "open");
+  const statusData = countBy(filtered, (item) => getTenderDeadlineState(item, undefined, now).displayStatus);
   const energyData = countBy(filtered, (item) => item.energy_type || "غير محدد").slice(0, 8);
   const governorateData = countBy(filtered, (item) => item.governorate || "غير محدد").slice(0, 10);
   const organizationData = countBy(filtered, (item) => item.organization_ar || item.organization_en || "غير محدد").slice(0, 6);

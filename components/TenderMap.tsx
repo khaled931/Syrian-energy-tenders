@@ -1,5 +1,6 @@
 "use client";
 
+import { useTenderClock } from "@/lib/useTenderClock";
 import Link from "next/link";
 import L from "leaflet";
 import { useEffect, useMemo, useState } from "react";
@@ -126,6 +127,7 @@ function MapInteractionController({ coarsePointer, interactionEnabled }: { coars
 }
 
 export default function TenderMap({ tenders, locale }: { tenders: Tender[]; locale: PlatformLocale }) {
+  const now = useTenderClock();
   const isArabic = locale === "ar";
   const fallback = isArabic ? "غير محدد" : "Not specified";
   const statusLabels = isArabic ? STATUS_LABELS_AR : STATUS_LABELS_EN;
@@ -147,9 +149,9 @@ export default function TenderMap({ tenders, locale }: { tenders: Tender[]; loca
 
   const mapTenders = useMemo(() => tenders.map((tender) => ({
     tender,
-    deadlineState: getTenderDeadlineState(tender),
+    deadlineState: getTenderDeadlineState(tender, undefined, now),
     coords: getTenderCoordinates(tender as TenderWithCoordinates),
-  })), [tenders]);
+  })), [now, tenders]);
 
   return (
     <section className="sr-map-shell" aria-label={isArabic ? "خريطة المناقصات والعروض في سورية" : "Map of tenders and offers in Syria"}>

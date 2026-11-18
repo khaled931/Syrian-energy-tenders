@@ -4,6 +4,7 @@ import { resolveCentralAccess } from "@/lib/centralAccess";
 import { isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
 import { getTender, isTenderInPublicSample } from "@/lib/tendersServer";
 import { normalizeDate } from "@/lib/types";
+import { serializeJsonLd } from "@/lib/jsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,7 @@ export default async function TenderDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /> : null}
+      {jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} /> : null}
       <TenderDetailContent
         tender={tender}
         firebaseConfigured={firebaseConfigured}

@@ -33,6 +33,9 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      - name: Security, persistence and deadline regression tests
+        run: npm run test:unit
+
       - name: Build
         run: npm run build
 

@@ -1,7 +1,7 @@
 import "server-only";
 import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb, isFirebaseAdminConfigured } from "@/lib/firebaseAdmin";
-import { normalizeDate, Tender } from "@/lib/types";
+import { getTenderDeadlineState, normalizeDate, Tender } from "@/lib/types";
 
 function serializeDate(value: unknown): string | undefined {
   const date = normalizeDate(value as never);
@@ -30,7 +30,9 @@ export function serializeTender(id: string, data: DocumentData): Tender {
     capacity: data.capacity ? String(data.capacity) : undefined,
     announcement_date: serializeDate(data.announcement_date),
     deadline: serializeDate(data.deadline),
-    status: String(data.status || "open"),
+    deadline_precision: data.deadline_precision === "date" || data.deadline_precision === "datetime"
+      ? data.deadline_precision : undefined,
+    status: getTenderDeadlineState(data as Tender).displayStatus,
     document_fee: data.document_fee ? String(data.document_fee) : undefined,
     currency: data.currency ? String(data.currency) : undefined,
     submission_method: data.submission_method ? String(data.submission_method) : undefined,

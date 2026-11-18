@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useTenderClock } from "@/lib/useTenderClock";
 import ShareButton from "@/components/ShareButton";
 import { usePlatform } from "@/components/PlatformShell";
 import {
   asRequirements,
   ENERGY_TYPE_LABELS_EN,
   formatDate,
+  getTenderDeadlineState,
   GOVERNORATE_LABELS_EN,
   STATUS_LABELS_AR,
   STATUS_LABELS_EN,
@@ -49,6 +51,7 @@ export default function TenderDetailContent({
   returnTo?: string;
 }) {
   const { locale } = usePlatform();
+  const now = useTenderClock();
   const isArabic = locale === "ar";
   const fallback = isArabic ? "غير محدد" : "Not specified";
   const back = isArabic ? "العودة إلى المناقصات" : "Back to tenders";
@@ -102,6 +105,7 @@ export default function TenderDetailContent({
     );
   }
 
+  const displayStatus = getTenderDeadlineState(tender, undefined, now).displayStatus;
   const title = isArabic ? tender.title_ar || tender.title_en || "مناقصة طاقة" : tender.title_en || tender.title_ar || "Energy tender";
   const organization = isArabic
     ? tender.organization_ar || tender.organization_en || "جهة غير محددة"
@@ -121,7 +125,7 @@ export default function TenderDetailContent({
 
       <article className="sr-detail-card">
         <div className="sr-detail-header">
-          <span className={`sr-status sr-status--${tender.status}`}>{getLabel(statusLabels, tender.status, fallback)}</span>
+          <span className={`sr-status sr-status--${displayStatus}`}>{getLabel(statusLabels, displayStatus, fallback)}</span>
           <span className="sr-type">{getLabel(typeLabels, tender.tender_type, fallback)}</span>
         </div>
 
