@@ -219,12 +219,12 @@ test("unconfigured admin stays gated and account return location follows client 
   const browserErrors = monitorBrowserErrors(page);
   await page.goto("/admin?lang=en&view=map#filters");
   await expect(page.getByRole("heading", { name: "تسجيل دخول لوحة الإدارة" })).toBeVisible();
-  await expect(page.getByRole("alert")).toHaveText("لم يتم ضبط إعدادات Firebase بعد.");
+  await expect(page.locator("main").getByRole("alert")).toHaveText("لم يتم ضبط إعدادات Firebase بعد.");
   await expect(page.locator("main textarea")).toHaveCount(0);
   const account = page.locator(".sr-platform-account");
   const returnLocation = async () => new URL(new URL((await account.getAttribute("href"))!).searchParams.get("returnTo")!);
   await expect.poll(async () => (await returnLocation()).pathname).toBe("/admin");
-  expect((await returnLocation()).searchParams.get("view")).toBe("map");
+  await expect.poll(async () => (await returnLocation()).searchParams.get("view")).toBe("map");
   expect((await returnLocation()).hash).toBe("#filters");
   await page.getByRole("link", { name: "العودة إلى الصفحة العامة" }).click();
   await expect.poll(async () => (await returnLocation()).pathname).toBe("/");
