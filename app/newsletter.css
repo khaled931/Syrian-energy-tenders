@@ -1,0 +1,85 @@
+/* Scope provider overrides to our footer; never alter other Kit forms. */
+.sr-newsletter-form { width: 100%; min-width: 0; margin-top: 16px; }
+.sr-newsletter-embed { width: 100%; min-width: 0; }
+.sr-newsletter-embed .formkit-form,
+.sr-newsletter-embed form[data-sv-form],
+.sr-newsletter-embed form > [data-style] {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font-family: inherit !important;
+}
+.sr-newsletter-embed :is(.formkit-background, .formkit-header, .formkit-subheader, .formkit-guarantee) { display: none !important; }
+.sr-newsletter-embed [data-element='fields'] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sr-newsletter-embed .formkit-field { width: 100% !important; min-width: 0 !important; margin: 0 !important; }
+.sr-newsletter-embed .formkit-input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 46px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  background: #fff !important;
+  color: #232b2b !important;
+  border: 1px solid #dce7e7 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  direction: ltr !important;
+  text-align: left !important;
+}
+.sr-newsletter-embed .formkit-input::placeholder { color: #637170 !important; opacity: 1 !important; }
+.sr-newsletter-embed .formkit-input:focus { outline: 2px solid #8cd5dd !important; outline-offset: 2px !important; }
+.sr-newsletter-embed [data-element='submit'] {
+  min-width: 96px !important;
+  height: 46px !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  background: #217a8d !important;
+  color: #fff !important;
+  border: 1px solid #60b6c5 !important;
+  border-radius: 10px !important;
+  font: inherit !important;
+  font-size: .9rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+.sr-newsletter-embed [data-element='submit'] > span { display: grid !important; place-items: center !important; height: 100% !important; padding: 0 !important; background: transparent !important; }
+.sr-newsletter-embed [data-element='submit']:hover { background: #155f70 !important; }
+.sr-newsletter-embed [data-element='submit']:focus-visible { outline: 2px solid #9bdee5 !important; outline-offset: 3px !important; }
+.sr-newsletter-embed [data-element='submit']:disabled { opacity: .65; cursor: wait !important; }
+.sr-newsletter-embed .formkit-powered-by-convertkit-container { margin: 10px 0 0 !important; padding: 0 !important; text-align: start !important; line-height: 1 !important; }
+.sr-newsletter-embed .formkit-powered-by-convertkit { margin: 0 !important; }
+.sr-newsletter-embed .formkit-alert { margin: 8px 0 !important; padding: 10px 12px !important; border-radius: 8px !important; font: inherit !important; font-size: .85rem !important; }
+.sr-newsletter-embed .formkit-alert:empty { display: none !important; }
+.sr-newsletter-form .sr-newsletter-privacy { margin: 10px 0 0; color: #b8cecf; font-size: .75rem; line-height: 1.6; }
+.sr-newsletter-loading { margin: 0; display: flex; align-items: center; min-height: 46px; color: #c2d6d7; font-size: .85rem; }
+.sr-newsletter-form[data-state='loading'] .sr-newsletter-embed { visibility: hidden; height: 0; overflow: hidden; }
+.sr-newsletter-form[data-state='error'] .sr-newsletter-embed { display: none; }
+.sr-newsletter-fallback { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 8px 16px; border-radius: 10px; background: #217a8d; color: #fff; font-size: .9rem; font-weight: 700; }
+@media (max-width: 380px) {
+  .sr-newsletter-embed [data-element='fields'] { grid-template-columns: minmax(0, 1fr) !important; }
+  .sr-newsletter-embed [data-element='submit'] { width: 100% !important; }
+}
+
+.sr-newsletter-form [hidden] { display: none !important; }
+

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getPlatformNavigationSet } from "@/lib/platformNavigation";
 import PlatformShell from "@/components/PlatformShell";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
@@ -8,6 +9,8 @@ import "./deadline-warning.css";
 import "./membership.css";
 import "./admin-panel.css";
 import "./tender-ui-polish.css";
+import "./platform-footer.css";
+import "./platform-parity.css";
 
 const bootstrapScript = `(() => {
   try {
@@ -15,8 +18,6 @@ const bootstrapScript = `(() => {
     const requestedLocale = url.searchParams.get('lang');
     if (requestedLocale === 'ar' || requestedLocale === 'en') {
       localStorage.setItem('sr-locale', requestedLocale);
-      url.searchParams.delete('lang');
-      history.replaceState(null, '', url.pathname + url.search + url.hash);
     }
 
     const locale = localStorage.getItem('sr-locale') === 'en' ? 'en' : 'ar';
@@ -43,11 +44,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export const revalidate = 300;
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const navigation = await getPlatformNavigationSet();
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: bootstrapScript }} /></head>
-      <body><PlatformShell>{children}</PlatformShell>
+      <body><PlatformShell navigation={navigation}>{children}</PlatformShell>
         <script src="https://syrianrenewables.com/english-contact-popup.js" defer />
 </body>
     </html>

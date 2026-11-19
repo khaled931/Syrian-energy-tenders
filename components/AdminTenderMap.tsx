@@ -1,5 +1,6 @@
 "use client";
 
+import { useTenderClock } from "@/lib/useTenderClock";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
@@ -7,7 +8,7 @@ const TenderMap = dynamic(() => import("@/components/TenderMap"), {
   ssr: false,
   loading: () => <div className="sr-state">جار تحميل الخريطة...</div>,
 });
-import { ENERGY_TYPES_AR, GOVERNORATES_AR, Tender, STATUS_LABELS_AR } from "@/lib/types";
+import { ENERGY_TYPES_AR, GOVERNORATES_AR, Tender, STATUS_LABELS_AR, getTenderDeadlineState } from "@/lib/types";
 
 function hasPreciseCoordinates(tender: Tender) {
   const lat = tender.latitude ?? tender.lat;
@@ -17,6 +18,7 @@ function hasPreciseCoordinates(tender: Tender) {
 }
 
 export default function AdminTenderMap({ tenders }: { tenders: Tender[] }) {
+  const now = useTenderClock();
   const [status, setStatus] = useState("all");
   const [energy, setEnergy] = useState("all");
   const [governorate, setGovernorate] = useState("all");
@@ -25,7 +27,7 @@ export default function AdminTenderMap({ tenders }: { tenders: Tender[] }) {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return tenders.filter((tender) => {
-      if (status !== "all" && (tender.status || "open") !== status) return false;
+      if (status !== "all" && getTenderDeadlineState(tender, undefined, now).displayStatus !== status) return false;
       if (energy !== "all" && tender.energy_type !== energy) return false;
       if (governorate !== "all" && tender.governorate !== governorate) return false;
       if (!term) return true;
@@ -42,7 +44,7 @@ export default function AdminTenderMap({ tenders }: { tenders: Tender[] }) {
         .toLowerCase()
         .includes(term);
     });
-  }, [energy, governorate, search, status, tenders]);
+  }, [energy, governorate, now, search, status, tenders]);
 
   const precise = filtered.filter(hasPreciseCoordinates).length;
   const approximate = filtered.length - precise;

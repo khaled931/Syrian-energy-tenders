@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import { useTenderClock } from "@/lib/useTenderClock";
 import MembershipNotice from "@/components/MembershipNotice";
 import TenderCard from "@/components/TenderCard";
 import { usePlatform } from "@/components/PlatformShell";
@@ -9,6 +10,7 @@ import {
   ENERGY_TYPES_AR,
   ENERGY_TYPE_LABELS_EN,
   GOVERNORATES_AR,
+  getTenderDeadlineState,
   GOVERNORATE_LABELS_EN,
   STATUS_LABELS_AR,
   STATUS_LABELS_EN,
@@ -116,6 +118,7 @@ function fallbackAccess(locale: "ar" | "en"): AccessState {
 
 export default function HomePage() {
   const { locale } = usePlatform();
+  const now = useTenderClock();
   const text = copy[locale];
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [access, setAccess] = useState<AccessState>(() => fallbackAccess(locale));
@@ -201,13 +204,13 @@ export default function HomePage() {
 
       return (
         (!term || searchableText.includes(term)) &&
-        (!status || tender.status === status) &&
+        (!status || getTenderDeadlineState(tender, undefined, now).displayStatus === status) &&
         (!energyType || tender.energy_type === energyType) &&
         (!governorate || tender.governorate === governorate) &&
         (!tenderType || tender.tender_type === tenderType)
       );
     });
-  }, [energyType, governorate, search, status, tenderType, tenders]);
+  }, [energyType, governorate, now, search, status, tenderType, tenders]);
 
   const activeFilters = [status, energyType, governorate, tenderType].filter(Boolean).length;
   const statusLabels = locale === "ar" ? STATUS_LABELS_AR : STATUS_LABELS_EN;

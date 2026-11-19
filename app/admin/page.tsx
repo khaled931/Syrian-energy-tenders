@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -10,58 +9,33 @@ import {
   orderBy,
   query,
   serverTimestamp,
-  Timestamp,
   updateDoc,
 } from "firebase/firestore";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { getBlob, ref } from "firebase/storage";
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { persistAdminTender, type PendingTenderSave } from "@/lib/adminTenderSave";
+import type { TenderForm } from "@/lib/tenderForm";
+import { useTenderClock } from "@/lib/useTenderClock";
 import AdminTenderAnalytics from "@/components/AdminTenderAnalytics";
 import AdminTenderMap from "@/components/AdminTenderMap";
-import { auth, db, isFirebaseConfigured, storage } from "@/lib/firebase";
+import { auth, db, isFirebaseConfigured, isTenderFileUploadEnabled, storage } from "@/lib/firebase";
 import {
   asRequirements,
   DATA_QUALITY_OPTIONS,
   dateToInput,
   ENERGY_TYPES_AR,
   GOVERNORATES_AR,
+  getTenderDeadlineState,
   Tender,
   TenderStatus,
   TenderType,
 } from "@/lib/types";
 
-type TenderForm = {
-  title_ar: string;
-  title_en: string;
-  organization_ar: string;
-  organization_en: string;
-  energy_type: string;
-  tender_type: TenderType;
-  governorate: string;
-  location: string;
-  latitude: string;
-  longitude: string;
-  capacity: string;
-  announcement_date: string;
-  deadline: string;
-  status: TenderStatus;
-  document_fee: string;
-  currency: string;
-  submission_method: string;
-  summary_ar: string;
-  summary_en: string;
-  description_ar: string;
-  description_en: string;
-  requirements: string;
-  source_url: string;
-  pdf_url: string;
-  data_quality: string;
-  notes: string;
-};
-
 type PublicApiStatus = "checking" | "ok" | "error";
 type AdminTab = "manage" | "analytics" | "map";
+const PUBLIC_API_CHECKING_MESSAGE = "جار التحقق من اتصال واجهة العرض بالبيانات...";
 
 const emptyForm: TenderForm = {
   title_ar: "",
@@ -88,50 +62,36 @@ const emptyForm: TenderForm = {
   requirements: "",
   source_url: "",
   pdf_url: "",
+  pdf_storage_path: "",
   data_quality: "Medium Confidence",
   notes: "",
 };
 
-function removeEmptyValues(payload: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined && value !== ""));
-}
-
-function formToPayload(form: TenderForm) {
-  return removeEmptyValues({
-    ...form,
-    latitude: form.latitude.trim() ? Number(form.latitude) : undefined,
-    longitude: form.longitude.trim() ? Number(form.longitude) : undefined,
-    announcement_date: form.announcement_date ? Timestamp.fromDate(new Date(form.announcement_date)) : null,
-    deadline: form.deadline ? Timestamp.fromDate(new Date(form.deadline)) : null,
-    requirements: form.requirements
-      .split("\n")
-      .map((item) => item.trim())
-      .filter(Boolean),
-  });
-}
-
 export default function AdminPage() {
+  const now = useTenderClock();
+  const saveLock = useRef(false);
+  const pendingSave = useRef<PendingTenderSave>({});
+  const originalTender = useRef<Tender | undefined>(undefined);
+  const [openingPdf, setOpeningPdf] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(Boolean(isFirebaseConfigured && auth && db));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [form, setForm] = useState<TenderForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [formVersion, setFormVersion] = useState(0);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(isFirebaseConfigured && auth && db ? "" : "لم يتم ضبط إعدادات Firebase بعد.");
   const [saving, setSaving] = useState(false);
   const [listSearch, setListSearch] = useState("");
   const [activeTab, setActiveTab] = useState<AdminTab>("manage");
   const [publicApiStatus, setPublicApiStatus] = useState<PublicApiStatus>("checking");
-  const [publicApiMessage, setPublicApiMessage] = useState("جار التحقق من اتصال واجهة العرض بالبيانات...");
+  const [publicApiMessage, setPublicApiMessage] = useState(PUBLIC_API_CHECKING_MESSAGE);
 
   const checkPublicApi = useCallback(async () => {
-    setPublicApiStatus("checking");
-    setPublicApiMessage("جار التحقق من اتصال واجهة العرض بالبيانات...");
-
     try {
       const response = await fetch("/api/tenders?locale=ar", {
         cache: "no-store",
@@ -164,30 +124,35 @@ export default function AdminPage() {
     }
   }, []);
 
+  const recheckPublicApi = useCallback(() => {
+    setPublicApiStatus("checking");
+    setPublicApiMessage(PUBLIC_API_CHECKING_MESSAGE);
+    void checkPublicApi();
+  }, [checkPublicApi]);
+
   useEffect(() => {
     const firebaseAuth = auth;
     const firestore = db;
 
-    if (!isFirebaseConfigured || !firebaseAuth || !firestore) {
-      setAuthLoading(false);
-      setError("لم يتم ضبط إعدادات Firebase بعد.");
-      return;
-    }
+    if (!isFirebaseConfigured || !firebaseAuth || !firestore) return;
 
     return onAuthStateChanged(firebaseAuth, async (currentUser) => {
       setUser(currentUser);
       setIsAdmin(false);
+      setPublicApiStatus("checking");
+      setPublicApiMessage(PUBLIC_API_CHECKING_MESSAGE);
       if (currentUser) {
         try {
           const adminSnapshot = await getDoc(doc(firestore, "admins", currentUser.uid));
           setIsAdmin(adminSnapshot.exists());
+          if (adminSnapshot.exists()) recheckPublicApi();
         } catch {
           setIsAdmin(false);
         }
       }
       setAuthLoading(false);
     });
-  }, []);
+  }, [recheckPublicApi]);
 
   useEffect(() => {
     const firestore = db;
@@ -203,10 +168,6 @@ export default function AdminPage() {
       },
     );
   }, [isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin) void checkPublicApi();
-  }, [checkPublicApi, isAdmin]);
 
   const visibleTenders = useMemo(() => {
     const term = listSearch.trim().toLowerCase();
@@ -227,7 +188,7 @@ export default function AdminPage() {
     );
   }, [listSearch, tenders]);
 
-  const openCount = tenders.filter((tender) => (tender.status || "open") === "open").length;
+  const openCount = tenders.filter((tender) => getTenderDeadlineState(tender, undefined, now).displayStatus === "open").length;
   const inactiveCount = tenders.length - openCount;
 
   async function login(event: FormEvent) {
@@ -249,9 +210,13 @@ export default function AdminPage() {
   }
 
   function resetForm(clearFeedback = true) {
+    if (saveLock.current) return;
+    pendingSave.current = {};
+    originalTender.current = undefined;
     setForm(emptyForm);
     setEditingId(null);
     setPdfFile(null);
+    setFormVersion((current) => current + 1);
     if (clearFeedback) {
       setMessage("");
       setError("");
@@ -259,6 +224,11 @@ export default function AdminPage() {
   }
 
   function editTender(tender: Tender) {
+    if (saveLock.current) return;
+    pendingSave.current = {};
+    originalTender.current = tender;
+    setPdfFile(null);
+    setFormVersion((current) => current + 1);
     setMessage("");
     setError("");
     setEditingId(tender.id || null);
@@ -272,11 +242,11 @@ export default function AdminPage() {
       tender_type: (tender.tender_type as TenderType) || "tender",
       governorate: tender.governorate || "غير محدد",
       location: tender.location || "",
-      latitude: tender.latitude !== undefined && tender.latitude !== null ? String(tender.latitude) : "",
-      longitude: tender.longitude !== undefined && tender.longitude !== null ? String(tender.longitude) : "",
+      latitude: tender.latitude != null || tender.lat != null ? String(tender.latitude ?? tender.lat) : "",
+      longitude: tender.longitude != null || tender.lng != null ? String(tender.longitude ?? tender.lng) : "",
       capacity: tender.capacity || "",
       announcement_date: dateToInput(tender.announcement_date),
-      deadline: dateToInput(tender.deadline),
+      deadline: dateToInput(tender.deadline, tender.deadline_precision),
       status: (tender.status as TenderStatus) || "open",
       document_fee: tender.document_fee || "",
       currency: tender.currency || "SYP",
@@ -288,70 +258,58 @@ export default function AdminPage() {
       requirements: asRequirements(tender.requirements).join("\n"),
       source_url: tender.source_url || "",
       pdf_url: tender.pdf_url || "",
+      pdf_storage_path: tender.pdf_storage_path || "",
       data_quality: tender.data_quality || "Medium Confidence",
       notes: tender.notes || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function uploadPdf(tenderId: string) {
-    if (!pdfFile || !storage) return form.pdf_url;
-    if (pdfFile.type && pdfFile.type !== "application/pdf") {
-      throw new Error("الملف المرفوع يجب أن يكون بصيغة PDF.");
-    }
-    if (pdfFile.size > 20 * 1024 * 1024) {
-      throw new Error("حجم ملف PDF يتجاوز 20 MB. استخدم ملفاً أصغر أو رابطاً خارجياً.");
-    }
-    const storageRef = ref(storage, `tenders/${tenderId}/${Date.now()}-${pdfFile.name}`);
-    const result = await uploadBytes(storageRef, pdfFile, { contentType: "application/pdf" });
-    return getDownloadURL(result.ref);
+  async function openStoredPdf() {
+    if (!storage || !form.pdf_storage_path || openingPdf) return;
+    setOpeningPdf(true);
+    setError("");
+    try {
+      // Authenticated Storage read; never mint or publish a reusable download token.
+      const blob = await getBlob(ref(storage, form.pdf_storage_path));
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tender-document.pdf";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      setError("تعذر فتح المرفق المحمي. تحقق من صلاحية الحساب أو أعد المحاولة لاحقاً.");
+    } finally { setOpeningPdf(false); }
   }
 
   async function saveTender(event: FormEvent) {
     event.preventDefault();
-    if (saving) return;
+    if (saveLock.current || !isAdmin || !user || !db) return;
+    saveLock.current = true;
     setSaving(true);
     setMessage("");
     setError("");
-
-    const firestore = db;
-    if (!firestore) {
-      setError("Firestore غير متصل.");
-      setSaving(false);
-      return;
-    }
-
     try {
       const wasEditing = Boolean(editingId);
-      if (editingId) {
-        const pdfUrl = await uploadPdf(editingId);
-        await updateDoc(doc(firestore, "tenders", editingId), {
-          ...formToPayload({ ...form, pdf_url: pdfUrl || form.pdf_url }),
-          updated_at: serverTimestamp(),
-        });
-      } else {
-        const newDoc = await addDoc(collection(firestore, "tenders"), {
-          ...formToPayload(form),
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        });
-        const pdfUrl = await uploadPdf(newDoc.id);
-        if (pdfUrl) {
-          await updateDoc(doc(firestore, "tenders", newDoc.id), { pdf_url: pdfUrl, updated_at: serverTimestamp() });
-        }
-      }
-
+      await persistAdminTender({
+        firestore: db, storage: isTenderFileUploadEnabled ? storage : null, form, file: pdfFile, editingId,
+        previous: originalTender.current, userId: user.uid, pending: pendingSave.current,
+      });
+      saveLock.current = false;
       resetForm(false);
       setMessage(wasEditing ? "تم تحديث المناقصة بنجاح." : "تمت إضافة المناقصة بنجاح.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذر حفظ المناقصة.");
+      setError(err instanceof Error ? err.message : "تعذر حفظ المناقصة. أعد المحاولة من النموذج نفسه.");
     } finally {
+      saveLock.current = false;
       setSaving(false);
     }
   }
 
   async function removeTender(id?: string) {
+    if (saveLock.current) return;
     const firestore = db;
     if (!id || !firestore) return;
     const confirmed = window.confirm("هل تريد حذف هذه المناقصة نهائياً؟");
@@ -362,22 +320,26 @@ export default function AdminPage() {
     try {
       await deleteDoc(doc(firestore, "tenders", id));
       setMessage("تم حذف المناقصة.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر حذف المناقصة.");
     }
   }
 
   async function updateStatus(id: string | undefined, status: TenderStatus) {
+    if (saveLock.current) return;
     const firestore = db;
     if (!id || !firestore) return;
 
     setMessage("");
     setError("");
     try {
-      await updateDoc(doc(firestore, "tenders", id), { status, updated_at: serverTimestamp() });
+      await updateDoc(doc(firestore, "tenders", id), {
+        status, status_origin: "manual", updated_at: serverTimestamp(),
+        save_operation_id: crypto.randomUUID(), updated_by_uid: user?.uid || null,
+      });
       setMessage("تم تحديث حالة المناقصة.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر تحديث حالة المناقصة.");
     }
@@ -469,7 +431,7 @@ export default function AdminPage() {
           <strong>حالة نشر البيانات</strong>
           <p>{publicApiMessage}</p>
         </div>
-        <button className="sr-button sr-button--ghost" type="button" onClick={() => void checkPublicApi()}>
+        <button className="sr-button sr-button--ghost" type="button" onClick={recheckPublicApi}>
           إعادة الفحص
         </button>
       </section>
@@ -521,7 +483,7 @@ export default function AdminPage() {
           <a href="#admin-tender-source">المصدر والمرفقات</a>
         </nav>
 
-        <fieldset id="admin-tender-basic">
+        <fieldset disabled={saving} id="admin-tender-basic">
           <legend>معلومات أساسية</legend>
           <label>
             عنوان المناقصة بالعربية *
@@ -587,7 +549,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset id="admin-tender-dates">
+        <fieldset disabled={saving} id="admin-tender-dates">
           <legend>مواعيد وقيمة دفتر الشروط</legend>
           <label>
             تاريخ الإعلان
@@ -615,7 +577,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset id="admin-tender-description">
+        <fieldset disabled={saving} id="admin-tender-description">
           <legend>الوصف والمتطلبات</legend>
           <label>
             ملخص عربي
@@ -639,7 +601,7 @@ export default function AdminPage() {
           </label>
         </fieldset>
 
-        <fieldset id="admin-tender-source">
+        <fieldset disabled={saving} id="admin-tender-source">
           <legend>مرفقات ومصدر وملاحظات</legend>
           <label>
             رابط المصدر
@@ -650,9 +612,24 @@ export default function AdminPage() {
             <input type="url" name="pdf_url" value={form.pdf_url} onChange={handleChange} dir="ltr" />
           </label>
           <label>
-            رفع PDF — حد أقصى 20 MB
-            <input type="file" accept="application/pdf,.pdf" onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
+            رفع PDF — حد أقصى 15 MiB
+            <input key={formVersion} type="file" accept="application/pdf,.pdf" disabled={!isTenderFileUploadEnabled} aria-describedby={!isTenderFileUploadEnabled ? "admin-upload-unavailable" : undefined} onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
           </label>
+          {!isTenderFileUploadEnabled ? (
+            <p id="admin-upload-unavailable" className="sr-field-wide sr-state" role="status">
+              رفع ملفات PDF غير مفعّل حاليًا. يمكنك حفظ المناقصة دون ملف أو إضافة رابط موثوق لدفتر الشروط.
+            </p>
+          ) : null}
+          {form.pdf_storage_path ? (
+            <div className="sr-field-wide">
+              <button type="button" className="sr-button sr-button--ghost" disabled={saving || openingPdf} onClick={() => void openStoredPdf()}>
+                {openingPdf ? "جار فتح المرفق..." : "فتح المرفق المحمي"}
+              </button>
+              <button type="button" className="sr-button sr-button--ghost" disabled={saving} onClick={() => setForm((current) => ({ ...current, pdf_storage_path: "" }))}>
+                إزالة المرفق من السجل
+              </button>
+            </div>
+          ) : null}
           <label>
             جودة البيانات
             <select name="data_quality" value={form.data_quality} onChange={handleChange}>
@@ -720,7 +697,7 @@ export default function AdminPage() {
                     <td data-label="الحالة">
                       <select
                         aria-label={`حالة ${tender.title_ar || tender.title_en || "المناقصة"}`}
-                        value={tender.status || "open"}
+                        value={getTenderDeadlineState(tender, undefined, now).displayStatus}
                         onChange={(event) => void updateStatus(tender.id, event.target.value as TenderStatus)}
                       >
                         <option value="open">مفتوحة</option>
@@ -732,8 +709,8 @@ export default function AdminPage() {
                     <td data-label="الإجراءات">
                       <div className="sr-admin-row__actions">
                         <Link className="sr-button sr-button--ghost" href={`/tenders/${tender.id}`}>عرض</Link>
-                        <button className="sr-button sr-button--ghost" type="button" onClick={() => editTender(tender)}>تعديل</button>
-                        <button className="sr-button sr-button--danger" type="button" onClick={() => void removeTender(tender.id)}>حذف</button>
+                        <button className="sr-button sr-button--ghost" type="button" disabled={saving} onClick={() => editTender(tender)}>تعديل</button>
+                        <button className="sr-button sr-button--danger" type="button" disabled={saving} onClick={() => void removeTender(tender.id)}>حذف</button>
                       </div>
                     </td>
                   </tr>

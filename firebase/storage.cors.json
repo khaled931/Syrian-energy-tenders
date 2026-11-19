@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://tender.syrianrenewables.com"],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]

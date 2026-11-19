@@ -1,3 +1,5 @@
+import navigationSnapshot from "./platform-navigation-fallback.json";
+
 export type PlatformLocale = "ar" | "en";
 
 export interface PlatformNavigationItem {
@@ -10,7 +12,22 @@ export interface PlatformNavigationItem {
 }
 
 export const PLATFORM_MAIN_SITE = "https://syrianrenewables.com";
-export const PLATFORM_LOGO = `${PLATFORM_MAIN_SITE}/brand/syrian-renewables-logo-fixed.svg`;
+export const PLATFORM_TENDERS_SITE = "https://tender.syrianrenewables.com";
+export const PLATFORM_LOGO = "/syrian-renewables-logo.svg";
+
+/** The app router can commit a pathname before the browser updates its URL. */
+export function resolveTenderReturnUrl(pathname: string | null, location: string, locale: PlatformLocale) {
+  const target = new URL(`${PLATFORM_TENDERS_SITE}${pathname || "/"}`);
+  const browserLocation = new URL(`${PLATFORM_TENDERS_SITE}${location}`);
+  // Carry query/hash only when they belong to the current route. Never attach
+  // the previous page's location to the newly committed app-router pathname.
+  if (target.pathname === browserLocation.pathname) {
+    target.search = browserLocation.search;
+    target.hash = browserLocation.hash;
+  }
+  target.searchParams.set("lang", locale);
+  return target.toString();
+}
 
 export const platformBrand = {
   name: { ar: "بوابة الطاقة المتجددة في سورية", en: "Syrian Renewables" },
@@ -28,72 +45,48 @@ export const platformBrand = {
   },
 };
 
-export const platformNavigation: PlatformNavigationItem[] = [
-  { key: "home", href: "/", label: { ar: "الصفحة الرئيسية", en: "Home" } },
-  { key: "news", href: "/news", label: { ar: "أخبار الطاقة في سورية", en: "Syria Energy News" } },
-  {
-    key: "renewables",
-    label: { ar: "الطاقات المتجددة", en: "Renewable Energy" },
-    children: [
-      { key: "storage-batteries", href: "/storage-and-batteries", label: { ar: "أنظمة التخزين والبطاريات", en: "Storage Systems & Batteries" } },
-      { key: "solar-energy", href: "/solar-energy", label: { ar: "الطاقة الشمسية", en: "Solar Energy" } },
-      { key: "wind-energy", href: "/wind-energy", label: { ar: "طاقة الرياح", en: "Wind Energy" } },
-      { key: "hydropower", href: "/hydropower", label: { ar: "الطاقة الكهرومائية", en: "Hydropower" } },
-      { key: "biogas", href: "/biogas", label: { ar: "الغاز الحيوي", en: "Biogas" } },
-    ],
-  },
-  {
-    key: "services",
-    label: { ar: "خدماتنا", en: "Our Services" },
-    children: [
-      { key: "emissions-climate", href: "https://climate.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "الانبعاثات والمناخ", en: "Emissions and Climate" } },
-      { key: "reports-research", href: "/reports", label: { ar: "التقارير والأبحاث", en: "Reports and Research" } },
-      { key: "ev-map", href: "https://ev.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "خريطة شواحن السيارات الكهربائية", en: "EV Charging Map" } },
-      { key: "fuel-price-tracker", href: "https://fuel-prices.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع أسعار الوقود في سورية", en: "Syrian Fuel Price Tracker" } },
-      { key: "policy-tracker", href: "https://policies.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع سياسات الطاقة", en: "Energy Policy Tracker" } },
-      { key: "project-tracker", href: "https://projects.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع مشاريع الطاقة", en: "Energy Project Tracker" } },
-      { key: "energy-tenders", href: "https://tender.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "متتبع مناقصات الطاقة", en: "Energy Tenders Tracker" } },
-      { key: "major-projects", href: "https://major-projects.syrianrenewables.com/", external: true, openInNewTab: true, label: { ar: "مشاريع كبرى", en: "Major Projects" } },
-      { key: "energy-jobs", href: "https://syr-res-jobs.vercel.app/", external: true, openInNewTab: true, label: { ar: "وظائف الطاقة", en: "Energy Jobs" } },
-      { key: "energy-contracts", href: "https://contracts.syrianrenewables.com", external: true, openInNewTab: false, label: { ar: "اتفاقيات وعقود الطاقة", en: "Energy Agreements & Contracts" } },
-      { key: "energy-market", href: "https://market.syrianrenewables.com", external: true, openInNewTab: false, label: { ar: "سوق الطاقة", en: "Energy Market" } },
-    ],
-  },
-  {
-    key: "useful-tools",
-    label: { ar: "أدوات مفيدة", en: "Useful Tools" },
-    children: [
-      { key: "solar-calculator", href: "https://solarist.syrianrenewables.com/", external: true, openInNewTab: false, label: { ar: "حاسبة الطاقة الشمسية", en: "Solar Energy Calculator" } },
-      { key: "power-plant-map", href: "https://syr-res-power-plant-map.vercel.app/", external: true, openInNewTab: true, label: { ar: "خرائط محطات الطاقة", en: "Power Plant Maps" } },
-      { key: "ninja-simulator", href: "https://syr-res-ninja-app.vercel.app/", external: true, openInNewTab: true, label: { ar: "محاكاة الطاقة الشمسية والريحية في سورية", en: "Solar and Wind Energy Simulation in Syria" } },
-    ],
-  },
-  {
-    key: "official-institutions",
-    label: { ar: "هيئات ومؤسسات رسمية", en: "Official Institutions" },
-    children: [
-      { key: "ministry-energy", href: "/ministry-of-energy", label: { ar: "وزارة الطاقة السورية", en: "Syrian Ministry of Energy" } },
-      { key: "syrian-petroleum-company", href: "/syrian-petroleum-company", label: { ar: "الشركة السورية للبترول", en: "Syrian Petroleum Company" } },
-      { key: "syrian-electricity-company", href: "/syrian-electricity-company", label: { ar: "الشركة السورية للكهرباء", en: "Syrian Electricity Company" } },
-      { key: "renewable-energy-support-fund", href: "/renewable-energy-support-fund", label: { ar: "صندوق دعم الطاقات المتجددة", en: "Renewable Energy Support Fund" } },
-      { key: "nerc", href: "/nerc", label: { ar: "المركز الوطني لبحوث الطاقة NERC", en: "National Energy Research Center (NERC)" } },
-    ],
-  },
-  {
-    key: "about-platform",
-    label: { ar: "عن المنصة", en: "About the Platform" },
-    children: [
-      { key: "about-us", href: "/about-us", label: { ar: "من نحن", en: "Who We Are" } },
-      { key: "contact", href: "/contact", label: { ar: "تواصل معنا", en: "Contact Us" } },
-      { key: "join-team", href: "/join-our-team", label: { ar: "انضم إلى فريقنا", en: "Join Our Team" } },
-      { key: "privacy-policy", href: "/privacy-policy", label: { ar: "سياسة الخصوصية", en: "Privacy Policy" } },
-      { key: "partnerships", href: "/partnerships", label: { ar: "شراكات", en: "Partnerships" } },
-    ],
-  },
-];
+/** Snapshot of the official navigation API; used only if the central source fails. */
+export const platformNavigationByLocale: Record<PlatformLocale, PlatformNavigationItem[]> = {
+  ar: parsePlatformNavigation({ items: navigationSnapshot.ar }),
+  en: parsePlatformNavigation({ items: navigationSnapshot.en }),
+};
+export const platformNavigation = platformNavigationByLocale.ar;
+
+export function parsePlatformNavigation(payload: unknown): PlatformNavigationItem[] {
+  if (!payload || typeof payload !== "object" || !("items" in payload) || !Array.isArray(payload.items) || !payload.items.length || payload.items.length > 20) {
+    throw new Error("Invalid platform navigation");
+  }
+  const keys = new Set<string>();
+  function parse(value: unknown, depth = 0): PlatformNavigationItem {
+    if (!value || typeof value !== "object" || depth > 1) throw new Error("Invalid navigation entry");
+    const item = value as Record<string, unknown>;
+    const label = item.label as Record<string, unknown> | undefined;
+    if (typeof item._key !== "string" || !item._key || keys.has(item._key) || !label || typeof label.ar !== "string" || typeof label.en !== "string") throw new Error("Invalid navigation label/key");
+    keys.add(item._key);
+    let href: string | undefined;
+    if (item.href !== undefined) {
+      if (typeof item.href !== "string" || !item.href) throw new Error("Invalid navigation URL");
+      if (item.href.startsWith("/") && !item.href.startsWith("//") && !item.href.includes("\\")) href = item.href;
+      else {
+        const url = new URL(item.href);
+        if (!["https:", "http:"].includes(url.protocol) || url.username || url.password) throw new Error("Unsafe navigation URL");
+        href = item.href;
+      }
+    }
+    let children: PlatformNavigationItem[] | undefined;
+    if (item.children !== undefined) {
+      if (!Array.isArray(item.children) || item.children.length > 80) throw new Error("Invalid navigation children");
+      children = item.children.map((child) => parse(child, depth + 1));
+    }
+    if (!href && !children?.length) throw new Error("Empty navigation entry");
+    return { key: item._key, label: { ar: label.ar, en: label.en }, href, external: item.external === true, openInNewTab: item.openInNewTab === true, children };
+  }
+  return payload.items.map((item) => parse(item));
+}
 
 export function resolvePlatformHref(href: string, locale: PlatformLocale) {
   if (/^https?:\/\//i.test(href)) return href;
+  if (/^\/(ar|en)(?=\/|$)/.test(href)) return `${PLATFORM_MAIN_SITE}${href.replace(/^\/(ar|en)(?=\/|$)/, `/${locale}`)}`;
   const path = href === "/" ? "" : href.startsWith("/") ? href : `/${href}`;
   return `${PLATFORM_MAIN_SITE}/${locale}${path}`;
 }

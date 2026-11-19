@@ -62,24 +62,42 @@ Collection: `admins`
 
 ## الإعداد المحلي
 
+استخدم Node.js 24 وnpm 11، كما هو محدد في `.nvmrc` و`package.json`.
+
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
+
+ملف `package-lock.json` جزء من المشروع ويجب تحديثه مع `package.json`. تستخدم فحوص GitHub الأمر `npm ci` لتثبيت النسخ المعتمدة نفسها.
+
+```bash
+npm audit --audit-level=moderate
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+تفاصيل الإصدارات والصيانة الدورية: [المرحلة الثالثة](docs/phase-3-dependencies-and-quality.md).
 
 ## إعداد Firebase
 
 1. أنشئ Firebase project.
 2. فعّل Firestore Database.
 3. فعّل Authentication ثم Email/Password.
-4. فعّل Storage إذا أردت رفع دفاتر الشروط PDF.
+4. فعّل Storage إذا أردت رفع دفاتر الشروط PDF. الرفع معطّل افتراضياً؛ بعد إنشاء الحاوية ونشر القواعد وضبط CORS فقط، اضبط `NEXT_PUBLIC_TENDER_FILE_UPLOADS_ENABLED=true` وأعد البناء. حفظ المناقصات دون ملف متاح في الحالتين.
 5. انسخ Web App config إلى متغيرات `NEXT_PUBLIC_FIREBASE_*`.
 6. أنشئ مستخدم أدمن من Authentication.
 7. انسخ UID المستخدم وأنشئ مستنداً في Firestore: `admins/{UID}`.
 8. انسخ قواعد الحماية من:
    - `firebase/firestore.rules`
    - `firebase/storage.rules`
+
+حالة المشروع الفعلية ومتطلبات تفعيل الملفات: [التحقق والتشغيل](docs/phase-4-production-readiness.md).
 
 ## متغيرات البيئة على Vercel
 
