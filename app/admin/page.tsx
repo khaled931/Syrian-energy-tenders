@@ -35,6 +35,7 @@ import {
 
 type PublicApiStatus = "checking" | "ok" | "error";
 type AdminTab = "manage" | "analytics" | "map";
+const PUBLIC_API_CHECKING_MESSAGE = "جار التحقق من اتصال واجهة العرض بالبيانات...";
 
 const emptyForm: TenderForm = {
   title_ar: "",
@@ -74,7 +75,7 @@ export default function AdminPage() {
   const [openingPdf, setOpeningPdf] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(Boolean(isFirebaseConfigured && auth && db));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenders, setTenders] = useState<Tender[]>([]);
@@ -83,17 +84,14 @@ export default function AdminPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [formVersion, setFormVersion] = useState(0);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(isFirebaseConfigured && auth && db ? "" : "لم يتم ضبط إعدادات Firebase بعد.");
   const [saving, setSaving] = useState(false);
   const [listSearch, setListSearch] = useState("");
   const [activeTab, setActiveTab] = useState<AdminTab>("manage");
   const [publicApiStatus, setPublicApiStatus] = useState<PublicApiStatus>("checking");
-  const [publicApiMessage, setPublicApiMessage] = useState("جار التحقق من اتصال واجهة العرض بالبيانات...");
+  const [publicApiMessage, setPublicApiMessage] = useState(PUBLIC_API_CHECKING_MESSAGE);
 
   const checkPublicApi = useCallback(async () => {
-    setPublicApiStatus("checking");
-    setPublicApiMessage("جار التحقق من اتصال واجهة العرض بالبيانات...");
-
     try {
       const response = await fetch("/api/tenders?locale=ar", {
         cache: "no-store",
@@ -126,30 +124,35 @@ export default function AdminPage() {
     }
   }, []);
 
+  const recheckPublicApi = useCallback(() => {
+    setPublicApiStatus("checking");
+    setPublicApiMessage(PUBLIC_API_CHECKING_MESSAGE);
+    void checkPublicApi();
+  }, [checkPublicApi]);
+
   useEffect(() => {
     const firebaseAuth = auth;
     const firestore = db;
 
-    if (!isFirebaseConfigured || !firebaseAuth || !firestore) {
-      setAuthLoading(false);
-      setError("لم يتم ضبط إعدادات Firebase بعد.");
-      return;
-    }
+    if (!isFirebaseConfigured || !firebaseAuth || !firestore) return;
 
     return onAuthStateChanged(firebaseAuth, async (currentUser) => {
       setUser(currentUser);
       setIsAdmin(false);
+      setPublicApiStatus("checking");
+      setPublicApiMessage(PUBLIC_API_CHECKING_MESSAGE);
       if (currentUser) {
         try {
           const adminSnapshot = await getDoc(doc(firestore, "admins", currentUser.uid));
           setIsAdmin(adminSnapshot.exists());
+          if (adminSnapshot.exists()) recheckPublicApi();
         } catch {
           setIsAdmin(false);
         }
       }
       setAuthLoading(false);
     });
-  }, []);
+  }, [recheckPublicApi]);
 
   useEffect(() => {
     const firestore = db;
@@ -165,10 +168,6 @@ export default function AdminPage() {
       },
     );
   }, [isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin) void checkPublicApi();
-  }, [checkPublicApi, isAdmin]);
 
   const visibleTenders = useMemo(() => {
     const term = listSearch.trim().toLowerCase();
@@ -300,7 +299,7 @@ export default function AdminPage() {
       saveLock.current = false;
       resetForm(false);
       setMessage(wasEditing ? "تم تحديث المناقصة بنجاح." : "تمت إضافة المناقصة بنجاح.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر حفظ المناقصة. أعد المحاولة من النموذج نفسه.");
     } finally {
@@ -321,7 +320,7 @@ export default function AdminPage() {
     try {
       await deleteDoc(doc(firestore, "tenders", id));
       setMessage("تم حذف المناقصة.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر حذف المناقصة.");
     }
@@ -340,7 +339,7 @@ export default function AdminPage() {
         save_operation_id: crypto.randomUUID(), updated_by_uid: user?.uid || null,
       });
       setMessage("تم تحديث حالة المناقصة.");
-      void checkPublicApi();
+      recheckPublicApi();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر تحديث حالة المناقصة.");
     }
@@ -432,7 +431,7 @@ export default function AdminPage() {
           <strong>حالة نشر البيانات</strong>
           <p>{publicApiMessage}</p>
         </div>
-        <button className="sr-button sr-button--ghost" type="button" onClick={() => void checkPublicApi()}>
+        <button className="sr-button sr-button--ghost" type="button" onClick={recheckPublicApi}>
           إعادة الفحص
         </button>
       </section>

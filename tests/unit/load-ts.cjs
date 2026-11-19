@@ -11,16 +11,16 @@ function loadTs(relativePath, mocks = {}) {
   function load(filename) {
     filename = path.resolve(filename);
     if (cache.has(filename)) return cache.get(filename).exports;
-    const module = new Module(filename);
-    module.filename = filename;
-    module.paths = Module._nodeModulePaths(path.dirname(filename));
-    cache.set(filename, module);
+    const loadedModule = new Module(filename);
+    loadedModule.filename = filename;
+    loadedModule.paths = Module._nodeModulePaths(path.dirname(filename));
+    cache.set(filename, loadedModule);
     if (filename.endsWith(".json")) {
-      module.exports = JSON.parse(fs.readFileSync(filename, "utf8"));
-      return module.exports;
+      loadedModule.exports = JSON.parse(fs.readFileSync(filename, "utf8"));
+      return loadedModule.exports;
     }
-    const normalRequire = module.require.bind(module);
-    module.require = (name) => {
+    const normalRequire = loadedModule.require.bind(loadedModule);
+    loadedModule.require = (name) => {
       if (Object.hasOwn(mocks, name)) return mocks[name];
       if (name.startsWith("./") || name.startsWith("../") || name.startsWith("@/")) {
         const resolved = name.startsWith("@/") ? path.join(root, name.slice(2)) : path.resolve(path.dirname(filename), name);
@@ -34,8 +34,8 @@ function loadTs(relativePath, mocks = {}) {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
       fileName: filename,
     });
-    module._compile(compiled.outputText, filename);
-    return module.exports;
+    loadedModule._compile(compiled.outputText, filename);
+    return loadedModule.exports;
   }
   return load(path.join(root, relativePath));
 }

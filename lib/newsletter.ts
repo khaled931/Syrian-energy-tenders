@@ -1,7 +1,6 @@
 // Keep Kit's subscription handling, confirmation flow and spam protection intact.
 export function mountKitNewsletter(host: HTMLDivElement, { locale, onStateChange }: { locale: "ar" | "en"; onStateChange: (state: "loading" | "ready" | "error") => void }) {
   let cancelled = false;
-  let timeout: number | undefined;
   let state: 'loading' | 'ready' | 'error' = 'loading';
   const setState = (next: typeof state) => {
     if (!cancelled && state !== next) {
@@ -47,7 +46,7 @@ export function mountKitNewsletter(host: HTMLDivElement, { locale, onStateChange
   script.src = 'https://syrian-renewables.kit.com/9aa680b026/index.js';
   script.onload = localize;
   script.onerror = () => setState('error');
-  timeout = window.setTimeout(() => setState('error'), 12000);
+  const timeout = window.setTimeout(() => setState('error'), 12000);
   host.appendChild(script);
 
   return () => {

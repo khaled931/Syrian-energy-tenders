@@ -214,6 +214,23 @@ test("newsletter provider failure exposes the canonical subscription fallback", 
   await expect(page.getByRole("link", { name: "فتح صفحة الاشتراك" })).toHaveAttribute("href", "https://syrian-renewables.kit.com/newsletterlandpage");
 });
 
+test("unconfigured admin stays gated and account return location follows client navigation", async ({ page }) => {
+  test.skip(Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY), "This guard covers the configuration-free CI build.");
+  const browserErrors = monitorBrowserErrors(page);
+  await page.goto("/admin?lang=en&view=map#filters");
+  await expect(page.getByRole("heading", { name: "تسجيل دخول لوحة الإدارة" })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveText("لم يتم ضبط إعدادات Firebase بعد.");
+  await expect(page.locator("main textarea")).toHaveCount(0);
+  const account = page.locator(".sr-platform-account");
+  const returnLocation = async () => new URL(new URL((await account.getAttribute("href"))!).searchParams.get("returnTo")!);
+  await expect.poll(async () => (await returnLocation()).pathname).toBe("/admin");
+  expect((await returnLocation()).searchParams.get("view")).toBe("map");
+  expect((await returnLocation()).hash).toBe("#filters");
+  await page.getByRole("link", { name: "العودة إلى الصفحة العامة" }).click();
+  await expect.poll(async () => (await returnLocation()).pathname).toBe("/");
+  expect(browserErrors).toEqual([]);
+});
+
 test("compact desktop and small mobile retain canonical geometry and accessible menus", async ({ page }, testInfo) => {
   for (const width of [1024, 390, 360]) {
     await page.setViewportSize({ width, height: 844 });

@@ -62,11 +62,27 @@ Collection: `admins`
 
 ## الإعداد المحلي
 
+استخدم Node.js 24 وnpm 11، كما هو محدد في `.nvmrc` و`package.json`.
+
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
+
+ملف `package-lock.json` جزء من المشروع ويجب تحديثه مع `package.json`. تستخدم فحوص GitHub الأمر `npm ci` لتثبيت النسخ المعتمدة نفسها.
+
+```bash
+npm audit --audit-level=moderate
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+تفاصيل الإصدارات والصيانة الدورية: [المرحلة الثالثة](docs/phase-3-dependencies-and-quality.md).
 
 ## إعداد Firebase
 

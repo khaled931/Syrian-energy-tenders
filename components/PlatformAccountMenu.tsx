@@ -1,21 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { PLATFORM_MAIN_SITE, type PlatformLocale } from "@/lib/platform";
 
 type Session = { authenticated: boolean; displayName?: string | null; plan?: string };
 
+function subscribeLocation(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  window.addEventListener("hashchange", onChange);
+  window.addEventListener("focus", onChange);
+  return () => {
+    window.removeEventListener("popstate", onChange);
+    window.removeEventListener("hashchange", onChange);
+    window.removeEventListener("focus", onChange);
+  };
+}
+const readLocation = () => window.location.pathname + window.location.search + window.location.hash;
+
 export default function PlatformAccountMenu({ locale }: { locale: PlatformLocale }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [returnTo, setReturnTo] = useState(`https://tender.syrianrenewables.com/?lang=${locale}`);
   const pathname = usePathname();
+  // Next's pathname hook covers app-router transitions; the external store
+  // supplies query/hash state after hydration without a derived-state effect.
+  const location = useSyncExternalStore(subscribeLocation, readLocation, () => pathname || "/");
+  const returnUrl = new URL(`https://tender.syrianrenewables.com${location}`);
+  returnUrl.searchParams.set("lang", locale);
   const isArabic = locale === "ar";
-  useEffect(() => {
-    const target = new URL(window.location.pathname + window.location.search + window.location.hash, "https://tender.syrianrenewables.com");
-    target.searchParams.set("lang", locale);
-    setReturnTo(target.toString());
-  }, [locale, pathname]);
   useEffect(() => {
     let controller: AbortController | undefined;
     const refresh = () => {
@@ -42,7 +53,7 @@ export default function PlatformAccountMenu({ locale }: { locale: PlatformLocale
     return () => { controller?.abort(); window.removeEventListener("focus", refresh); };
   }, []);
   const href = new URL(`/${locale}/account${session?.authenticated ? "" : "/login"}`, PLATFORM_MAIN_SITE);
-  if (!session?.authenticated) href.searchParams.set("returnTo", returnTo);
+  if (!session?.authenticated) href.searchParams.set("returnTo", returnUrl.toString());
   const label = session?.authenticated ? session.displayName || (isArabic ? "حسابي" : "Account") : (isArabic ? "دخول" : "Sign in");
   return (
     <a href={href.toString()} className="sr-platform-account"
