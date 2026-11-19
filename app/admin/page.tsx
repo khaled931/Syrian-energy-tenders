@@ -20,7 +20,7 @@ import type { TenderForm } from "@/lib/tenderForm";
 import { useTenderClock } from "@/lib/useTenderClock";
 import AdminTenderAnalytics from "@/components/AdminTenderAnalytics";
 import AdminTenderMap from "@/components/AdminTenderMap";
-import { auth, db, isFirebaseConfigured, storage } from "@/lib/firebase";
+import { auth, db, isFirebaseConfigured, isTenderFileUploadEnabled, storage } from "@/lib/firebase";
 import {
   asRequirements,
   DATA_QUALITY_OPTIONS,
@@ -293,7 +293,7 @@ export default function AdminPage() {
     try {
       const wasEditing = Boolean(editingId);
       await persistAdminTender({
-        firestore: db, storage, form, file: pdfFile, editingId,
+        firestore: db, storage: isTenderFileUploadEnabled ? storage : null, form, file: pdfFile, editingId,
         previous: originalTender.current, userId: user.uid, pending: pendingSave.current,
       });
       saveLock.current = false;
@@ -613,8 +613,13 @@ export default function AdminPage() {
           </label>
           <label>
             رفع PDF — حد أقصى 15 MiB
-            <input key={formVersion} type="file" accept="application/pdf,.pdf" onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
+            <input key={formVersion} type="file" accept="application/pdf,.pdf" disabled={!isTenderFileUploadEnabled} aria-describedby={!isTenderFileUploadEnabled ? "admin-upload-unavailable" : undefined} onChange={(event) => setPdfFile(event.target.files?.[0] || null)} />
           </label>
+          {!isTenderFileUploadEnabled ? (
+            <p id="admin-upload-unavailable" className="sr-field-wide sr-state" role="status">
+              رفع ملفات PDF غير مفعّل حاليًا. يمكنك حفظ المناقصة دون ملف أو إضافة رابط موثوق لدفتر الشروط.
+            </p>
+          ) : null}
           {form.pdf_storage_path ? (
             <div className="sr-field-wide">
               <button type="button" className="sr-button sr-button--ghost" disabled={saving || openingPdf} onClick={() => void openStoredPdf()}>

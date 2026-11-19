@@ -179,6 +179,15 @@ test("missing storage and invalid form data cannot create a record", async () =>
   await assert.rejects(f.save(), /مطلوبان/); assert.equal(f.records.size, 0);
 });
 
+test("unavailable Storage does not block tender saves without an upload", async () => {
+  const f = saveFixture(); f.input.storage = null; f.input.file = null;
+  f.input.form.pdf_url = "https://example.org/specifications.pdf";
+  await f.save();
+  assert.equal(f.records.size, 1);
+  assert.equal(f.records.get(f.input.pending.id).pdf_url, f.input.form.pdf_url);
+  assert.equal(f.calls.uploads.length, 0);
+});
+
 test("another operation after a lost creation acknowledgment is not overwritten on retry", async () => {
   const f = saveFixture(); f.calls.loseAck = true;
   await assert.rejects(f.save());

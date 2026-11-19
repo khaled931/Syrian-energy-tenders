@@ -89,13 +89,15 @@ npm run test:e2e
 1. أنشئ Firebase project.
 2. فعّل Firestore Database.
 3. فعّل Authentication ثم Email/Password.
-4. فعّل Storage إذا أردت رفع دفاتر الشروط PDF.
+4. فعّل Storage إذا أردت رفع دفاتر الشروط PDF. الرفع معطّل افتراضياً؛ بعد إنشاء الحاوية ونشر القواعد وضبط CORS فقط، اضبط `NEXT_PUBLIC_TENDER_FILE_UPLOADS_ENABLED=true` وأعد البناء. حفظ المناقصات دون ملف متاح في الحالتين.
 5. انسخ Web App config إلى متغيرات `NEXT_PUBLIC_FIREBASE_*`.
 6. أنشئ مستخدم أدمن من Authentication.
 7. انسخ UID المستخدم وأنشئ مستنداً في Firestore: `admins/{UID}`.
 8. انسخ قواعد الحماية من:
    - `firebase/firestore.rules`
    - `firebase/storage.rules`
+
+حالة المشروع الفعلية ومتطلبات تفعيل الملفات: [التحقق والتشغيل](docs/phase-4-production-readiness.md).
 
 ## متغيرات البيئة على Vercel
 

@@ -13,6 +13,10 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 export const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean);
+// A configured bucket name does not mean Storage has been provisioned.
+// Enable uploads only after deploying private rules and browser CORS.
+export const isTenderFileUploadEnabled = isFirebaseConfigured
+  && process.env.NEXT_PUBLIC_TENDER_FILE_UPLOADS_ENABLED === "true";
 
 let app: FirebaseApp | null = null;
 
