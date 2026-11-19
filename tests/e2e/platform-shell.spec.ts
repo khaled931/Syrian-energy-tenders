@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await page.route(`${MAIN_SITE}/api/account/session`, route => route.fulfill({ headers: { "Access-Control-Allow-Origin": route.request().headers().origin || "http://127.0.0.1:3000", "Access-Control-Allow-Credentials": "true" }, json: { authenticated: false } }));
   await page.route(`${MAIN_SITE}/english-contact-popup.js`, route => route.fulfill({ contentType: "application/javascript", body: "" }));
   await page.route("https://syrian-renewables.kit.com/9aa680b026/index.js", route => route.fulfill({ contentType: "application/javascript", body: `
-    document.currentScript.parentElement.insertAdjacentHTML('beforeend', '<form data-sv-form="9aa680b026" class="formkit-form"><div data-element="fields"><div class="formkit-field"><input name="email_address" class="formkit-input" required type="text"></div><button type="submit" data-element="submit"><span>Subscribe</span></button></div><a data-element="powered-by">Built with Kit</a></form>');
+    document.currentScript?.parentElement?.insertAdjacentHTML('beforeend', '<form data-sv-form="9aa680b026" class="formkit-form"><div data-element="fields"><div class="formkit-field"><input name="email_address" class="formkit-input" required type="text"></div><button type="submit" data-element="submit"><span>Subscribe</span></button></div><a data-element="powered-by">Built with Kit</a></form>');
   ` }));
 });
 
@@ -174,7 +174,7 @@ for (const locale of ["ar", "en"] as const) {
   });
 
   test(`${locale}: embedded newsletter and guest account preserve provider validation and return location`, async ({ page }) => {
-    await page.goto(`/?lang=${locale}`);
+    await page.goto(`/?lang=${locale}&view=map#filters`);
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     const newsletter = page.getByRole("form", { name: locale === "ar" ? "نموذج الاشتراك في النشرة البريدية" : "Newsletter subscription form" });
     await expect(newsletter).toBeVisible();
@@ -190,6 +190,8 @@ for (const locale of ["ar", "en"] as const) {
     const returnTo = new URL(href.searchParams.get("returnTo")!);
     expect(returnTo.hostname).toBe("tender.syrianrenewables.com");
     expect(returnTo.searchParams.get("lang")).toBe(locale);
+    expect(returnTo.searchParams.get("view")).toBe("map");
+    expect(returnTo.hash).toBe("#filters");
     // Intentionally do not submit the provider form.
   });
 }
@@ -221,6 +223,7 @@ test("compact desktop and small mobile retain canonical geometry and accessible 
       await page.getByRole("button", { name: "أدوات مفيدة", exact: true }).click();
       await expect(page.locator("#sr-primary-navigation").getByRole("link", { name: "مختبر الطاقة", exact: true })).toBeVisible();
       await page.keyboard.press("Escape");
+      await expect(page.locator("#sr-primary-navigation")).not.toBeVisible();
     }
     const logo = await page.locator(".sr-platform-footer-logo").boundingBox();
     expect(logo?.width).toBe(width < 650 ? 88 : 96);
@@ -231,11 +234,13 @@ test("compact desktop and small mobile retain canonical geometry and accessible 
   }
 });
 
-test("language links remain shareable and browser back restores the previous language", async ({ page }) => {
-  await page.goto("/?lang=ar");
+for (const entry of ["/?lang=ar", "/"]) {
+test(`language links remain shareable and browser back restores the previous language from ${entry}`, async ({ page }) => {
+  await page.goto(entry);
   await page.getByRole("link", { name: "Switch to English" }).click();
   await expect(page).toHaveURL(/lang=en/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.goBack();
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
 });
+}

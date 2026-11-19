@@ -54,10 +54,6 @@ function OfficialLogo({ footer = false }: { footer?: boolean }) {
         alt="Syrian Renewables — بوابة الطاقة المتجددة في سورية"
         width="217"
         height="298"
-        onError={(event) => {
-          event.currentTarget.onerror = null;
-          event.currentTarget.src = "/syrian-renewables-logo.svg";
-        }}
       />
     </span>
   );
@@ -254,6 +250,12 @@ export default function PlatformShell({ children, navigation = platformNavigatio
   function setLocale(next: PlatformLocale) {
     setLocaleState(next);
     const url = new URL(window.location.href);
+    if (!["ar", "en"].includes(url.searchParams.get("lang") || "")) {
+      // Preserve the language of an entry URL without a query before adding
+      // the next history entry, so Back restores the previous interface.
+      url.searchParams.set("lang", locale);
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
     url.searchParams.set("lang", next);
     window.history.pushState(null, "", url.pathname + url.search + url.hash);
     try { window.localStorage.setItem("sr-locale", next); } catch { /* current-page locale still works */ }

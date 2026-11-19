@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { PLATFORM_MAIN_SITE, type PlatformLocale } from "@/lib/platform";
 
 type Session = { authenticated: boolean; displayName?: string | null; plan?: string };
@@ -8,12 +9,13 @@ type Session = { authenticated: boolean; displayName?: string | null; plan?: str
 export default function PlatformAccountMenu({ locale }: { locale: PlatformLocale }) {
   const [session, setSession] = useState<Session | null>(null);
   const [returnTo, setReturnTo] = useState(`https://tender.syrianrenewables.com/?lang=${locale}`);
+  const pathname = usePathname();
   const isArabic = locale === "ar";
   useEffect(() => {
-    const target = new URL(window.location.pathname, "https://tender.syrianrenewables.com");
+    const target = new URL(window.location.pathname + window.location.search + window.location.hash, "https://tender.syrianrenewables.com");
     target.searchParams.set("lang", locale);
     setReturnTo(target.toString());
-  }, [locale]);
+  }, [locale, pathname]);
   useEffect(() => {
     let controller: AbortController | undefined;
     const refresh = () => {
