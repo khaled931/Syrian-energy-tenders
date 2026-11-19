@@ -228,6 +228,8 @@ test("unconfigured admin stays gated and account return location follows client 
   expect((await returnLocation()).hash).toBe("#filters");
   await page.getByRole("link", { name: "العودة إلى الصفحة العامة" }).click();
   await expect.poll(async () => (await returnLocation()).pathname).toBe("/");
+  expect((await returnLocation()).searchParams.has("view")).toBe(false);
+  expect((await returnLocation()).hash).toBe("");
   expect(browserErrors).toEqual([]);
 });
 

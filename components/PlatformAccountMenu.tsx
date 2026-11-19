@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { PLATFORM_MAIN_SITE, type PlatformLocale } from "@/lib/platform";
+import { PLATFORM_MAIN_SITE, resolveTenderReturnUrl, type PlatformLocale } from "@/lib/platform";
 
 type Session = { authenticated: boolean; displayName?: string | null; plan?: string };
 
@@ -24,8 +24,7 @@ export default function PlatformAccountMenu({ locale }: { locale: PlatformLocale
   // Next's pathname hook covers app-router transitions; the external store
   // supplies query/hash state after hydration without a derived-state effect.
   const location = useSyncExternalStore(subscribeLocation, readLocation, () => pathname || "/");
-  const returnUrl = new URL(`https://tender.syrianrenewables.com${location}`);
-  returnUrl.searchParams.set("lang", locale);
+  const returnUrl = resolveTenderReturnUrl(pathname, location, locale);
   const isArabic = locale === "ar";
   useEffect(() => {
     let controller: AbortController | undefined;
@@ -53,7 +52,7 @@ export default function PlatformAccountMenu({ locale }: { locale: PlatformLocale
     return () => { controller?.abort(); window.removeEventListener("focus", refresh); };
   }, []);
   const href = new URL(`/${locale}/account${session?.authenticated ? "" : "/login"}`, PLATFORM_MAIN_SITE);
-  if (!session?.authenticated) href.searchParams.set("returnTo", returnUrl.toString());
+  if (!session?.authenticated) href.searchParams.set("returnTo", returnUrl);
   const label = session?.authenticated ? session.displayName || (isArabic ? "حسابي" : "Account") : (isArabic ? "دخول" : "Sign in");
   return (
     <a href={href.toString()} className="sr-platform-account"

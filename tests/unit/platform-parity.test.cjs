@@ -1,8 +1,16 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const { URL } = require("node:url");
 const { loadTs } = require("./load-ts.cjs");
 const snapshot = require("../../lib/platform-navigation-fallback.json");
-const { parsePlatformNavigation, platformNavigationByLocale, resolvePlatformHref } = loadTs("lib/platform.ts");
+const { parsePlatformNavigation, platformNavigationByLocale, resolvePlatformHref, resolveTenderReturnUrl } = loadTs("lib/platform.ts");
+
+test("login return URLs follow the current route and reject stale route context", () => {
+  assert.equal(resolveTenderReturnUrl("/", "/admin?lang=en&view=map#filters", "en"), "https://tender.syrianrenewables.com/?lang=en");
+  assert.equal(resolveTenderReturnUrl("/admin", "/admin?lang=en&view=map#filters", "ar"), "https://tender.syrianrenewables.com/admin?lang=ar&view=map#filters");
+  assert.equal(resolveTenderReturnUrl("/tenders/7", "/", "ar"), "https://tender.syrianrenewables.com/tenders/7?lang=ar");
+  assert.equal(new URL(resolveTenderReturnUrl("//example.org/path", "//example.org/path", "ar")).origin, "https://tender.syrianrenewables.com");
+});
 
 const required = ["electric-vehicles", "energy-advisor", "damascus-bourse-news", "electricity-meter-reading", "un-data-portal", "electricity-bill-calculator", "resources-map", "oil-gas-map", "renewable-energy-sale-guide", "pvgis", "fuel-95-stations", "energy-lab", "energy-survey", "in-the-media"];
 

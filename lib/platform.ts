@@ -12,7 +12,22 @@ export interface PlatformNavigationItem {
 }
 
 export const PLATFORM_MAIN_SITE = "https://syrianrenewables.com";
+export const PLATFORM_TENDERS_SITE = "https://tender.syrianrenewables.com";
 export const PLATFORM_LOGO = "/syrian-renewables-logo.svg";
+
+/** The app router can commit a pathname before the browser updates its URL. */
+export function resolveTenderReturnUrl(pathname: string | null, location: string, locale: PlatformLocale) {
+  const target = new URL(`${PLATFORM_TENDERS_SITE}${pathname || "/"}`);
+  const browserLocation = new URL(`${PLATFORM_TENDERS_SITE}${location}`);
+  // Carry query/hash only when they belong to the current route. Never attach
+  // the previous page's location to the newly committed app-router pathname.
+  if (target.pathname === browserLocation.pathname) {
+    target.search = browserLocation.search;
+    target.hash = browserLocation.hash;
+  }
+  target.searchParams.set("lang", locale);
+  return target.toString();
+}
 
 export const platformBrand = {
   name: { ar: "بوابة الطاقة المتجددة في سورية", en: "Syrian Renewables" },
